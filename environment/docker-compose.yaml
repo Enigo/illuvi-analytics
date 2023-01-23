@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:14.4
+    restart: 'no'
+    environment:
+      POSTGRES_PASSWORD: notsecure
+      POSTGRES_USER: data-loader-local
+      POSTGRES_DB: illuvium-land
+    ports:
+      - '5432:5432'
+
+  flyway:
+    image: flyway/flyway:7.5.1
+    command: -url=jdbc:postgresql://db/illuvium-land -schemas=public -user=data-loader-local -password=notsecure -connectRetries=60 migrate
+    volumes:
+      - ./migrations:/flyway/sql
+    depends_on:
+      - db
