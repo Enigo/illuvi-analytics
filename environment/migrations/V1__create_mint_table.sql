@@ -4,6 +4,6 @@ CREATE table mint
     status varchar(50),
     wallet  varchar(255),
     token_type  varchar(15),
-    token_id  varchar(15),
+    token_id  integer,
     minted_on timestamp
 );
