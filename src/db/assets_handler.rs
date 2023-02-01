@@ -1,46 +1,42 @@
+use crate::db::db_handler::Persistable;
 use crate::model::asset::Asset;
+use async_trait::async_trait;
 use log::{error, info};
-use sqlx::{query, query_as, FromRow, Pool, Postgres};
-use std::collections::HashSet;
+use sqlx::{Pool, Postgres, QueryBuilder};
 
-pub async fn save_asset(asset: &Asset, pool: &Pool<Postgres>) {
-    match query("insert into asset (token_id, token_address, name, tier, solon, carbon, crypton, silicon, hydrogen, hyperion, landmark)\
-                 values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)")
-        .bind(&asset.token_id.parse::<i32>().unwrap())
-        .bind(&asset.token_address)
-        .bind(&asset.metadata.name)
-        .bind(&asset.metadata.tier)
-        .bind(&asset.metadata.solon)
-        .bind(&asset.metadata.carbon)
-        .bind(&asset.metadata.crypton)
-        .bind(&asset.metadata.silicon)
-        .bind(&asset.metadata.hydrogen)
-        .bind(&asset.metadata.hyperion)
-        .bind(&asset.metadata.landmark)
-        .execute(pool).await {
-        Ok(result) => {
-            info!("Inserted {} rows", result.rows_affected())
-        }
-        Err(e) => {
-            error!("Couldn't insert values due to {}", e)
+pub struct AssetSaver;
+
+#[async_trait]
+impl Persistable<Asset> for AssetSaver {
+    async fn persist_one(&self, asset: &Asset, pool: &Pool<Postgres>) {
+        let asset_result = &asset.result;
+        let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
+            "insert into asset (token_id, token_address, name, tier, solon, carbon, crypton, silicon, hydrogen, hyperion, landmark) ",
+        );
+
+        query_builder.push_values(asset_result, |mut builder, res| {
+            builder
+                .push_bind(res.token_id.parse::<i32>().unwrap())
+                .push_bind(res.token_address.clone())
+                .push_bind(res.metadata.name.clone())
+                .push_bind(res.metadata.tier)
+                .push_bind(res.metadata.solon)
+                .push_bind(res.metadata.carbon)
+                .push_bind(res.metadata.crypton)
+                .push_bind(res.metadata.silicon)
+                .push_bind(res.metadata.hydrogen)
+                .push_bind(res.metadata.hyperion)
+                .push_bind(res.metadata.landmark.clone());
+        });
+
+        let query = query_builder.build();
+        match query.execute(pool).await {
+            Ok(result) => {
+                info!("Inserted {} rows", result.rows_affected())
+            }
+            Err(e) => {
+                error!("Couldn't insert values due to {}", e)
+            }
         }
     }
-}
-
-pub async fn get_all_token_ids(connection: &Pool<Postgres>) -> Option<HashSet<i32>> {
-    match query_as::<Postgres, AssetDb>("select token_id from asset")
-        .fetch_all(connection)
-        .await
-    {
-        Ok(result) => Some(result.iter().map(|mint| mint.token_id).collect()),
-        Err(e) => {
-            error!("Error fetching data {}", e);
-            None
-        }
-    }
-}
-
-#[derive(FromRow)]
-struct AssetDb {
-    token_id: i32,
 }

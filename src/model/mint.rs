@@ -1,9 +1,20 @@
+use crate::model::shared::PaginatedApi;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Mint {
     pub result: Vec<TheResult>,
     pub cursor: String,
+}
+
+impl PaginatedApi for Mint {
+    fn get_cursor(&self) -> String {
+        self.cursor.clone()
+    }
+
+    fn has_results(&self) -> bool {
+        !self.result.is_empty()
+    }
 }
 
 #[derive(Deserialize, Debug)]
