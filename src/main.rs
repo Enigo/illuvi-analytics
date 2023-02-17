@@ -3,8 +3,8 @@ use dotenvy::dotenv;
 
 mod api_reader;
 mod db;
-mod env_utils;
 mod model;
+mod utils;
 
 fn main() {
     env_logger::init_from_env(

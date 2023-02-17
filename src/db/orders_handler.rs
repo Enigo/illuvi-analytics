@@ -1,6 +1,7 @@
 use crate::db::db_handler;
 use crate::db::db_handler::Persistable;
-use crate::model::order::{BuyData, Order};
+use crate::model::order::Order;
+use crate::utils::price_utils;
 use async_trait::async_trait;
 use log::{error, info};
 use sqlx::types::chrono::{DateTime, NaiveDateTime};
@@ -19,14 +20,19 @@ impl Persistable<Order> for OrderSaver {
 
         query_builder.push_values(order_result, |mut builder, res| {
             let sell_data = &res.sell.data;
+            let buy_data = &res.buy.data;
+            let token_id = sell_data.token_id.clone().unwrap().parse::<i32>().unwrap();
             builder
                 .push_bind(res.order_id)
                 .push_bind(res.status.clone())
                 .push_bind(res.wallet.clone())
-                .push_bind(sell_data.token_id.parse::<i32>().unwrap())
+                .push_bind(token_id)
                 .push_bind(&sell_data.token_address)
                 .push_bind(&res.buy.buy_currency)
-                .push_bind(get_price(&res.buy.data))
+                .push_bind(price_utils::get_price(
+                    &buy_data.quantity,
+                    buy_data.decimals.unwrap(),
+                ))
                 .push_bind(DateTime::parse_from_rfc3339(&res.timestamp).unwrap())
                 .push_bind(DateTime::parse_from_rfc3339(&res.updated_timestamp).unwrap());
         });
@@ -43,23 +49,9 @@ impl Persistable<Order> for OrderSaver {
     }
 }
 
-fn get_price(data: &BuyData) -> f32 {
-    let index_of_comma = data.quantity.chars().count() as i32 - data.decimals;
-
-    return match index_of_comma {
-        -1 => ("0.0".to_owned() + &data.quantity).parse().unwrap(),
-        0 => ("0.".to_owned() + &data.quantity).parse().unwrap(),
-        _ => {
-            let mut quantity_clone = data.quantity.clone();
-            quantity_clone.insert(index_of_comma as usize, '.');
-            quantity_clone.parse().unwrap()
-        }
-    };
-}
-
 pub async fn fetch_last_updated_on() -> Option<NaiveDateTime> {
     let pool = db_handler::open_connection().await;
-    let result = match query_as::<Postgres, CreatedOn>(
+    let result = match query_as::<Postgres, UpdatedOn>(
         "select max(updated_on) as updated_on from order_data",
     )
     .fetch_one(&pool)
@@ -117,12 +109,79 @@ pub async fn update_buy_currency_for_order_id(
     }
 }
 
+pub async fn fetch_all_filled_token_ids_with_no_wallet_to_and_no_sell_price(
+    pool: &Pool<Postgres>,
+) -> Option<HashSet<i32>> {
+    let result = match query_as::<Postgres, TokenId>(
+        "select distinct(token_id) from order_data where status = 'filled' and wallet_to is null and sell_price is null",
+    )
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => Some(result.iter().map(|order| order.token_id).collect()),
+        Err(e) => {
+            error!("Error fetching data: {}", e);
+            None
+        }
+    };
+
+    result
+}
+
+pub async fn fetch_all_filled_order_ids_with_no_wallet_to_and_no_sell_price_for_token_id(
+    token_id: i32,
+    pool: &Pool<Postgres>,
+) -> Option<HashSet<i32>> {
+    let result = match query_as::<Postgres, OrderId>(
+        "select distinct(order_id) from order_data where status = 'filled' and wallet_to is null and sell_price is null and token_id = $1",
+    )
+        .bind(token_id)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => Some(result.iter().map(|order| order.order_id).collect()),
+        Err(e) => {
+            error!("Error fetching data: {}", e);
+            None
+        }
+    };
+
+    result
+}
+
+pub async fn update_wallet_to_and_sell_price_for_order_id(
+    order_id: i32,
+    wallet_to: String,
+    sell_price: f32,
+    pool: &Pool<Postgres>,
+) {
+    match query("update order_data set wallet_to = $1, sell_price = $2 where order_id = $3")
+        .bind(wallet_to)
+        .bind(sell_price)
+        .bind(order_id)
+        .execute(pool)
+        .await
+    {
+        Ok(_) => {
+            info!("Updated order_id {}", order_id)
+        }
+        Err(e) => {
+            error!("Error updating order_id {}: {}", order_id, e);
+        }
+    }
+}
+
 #[derive(FromRow)]
 struct OrderId {
     order_id: i32,
 }
 
 #[derive(FromRow)]
-struct CreatedOn {
+struct TokenId {
+    token_id: i32,
+}
+
+#[derive(FromRow)]
+struct UpdatedOn {
     updated_on: Option<NaiveDateTime>,
 }
