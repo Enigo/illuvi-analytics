@@ -22,6 +22,10 @@ pub struct TheResult {
     pub token_id: String,
     pub token_address: String,
     pub metadata: Metadata,
+    #[serde(rename = "user")]
+    pub current_owner: String,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
 #[derive(Deserialize, Debug)]

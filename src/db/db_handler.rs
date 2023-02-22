@@ -1,6 +1,7 @@
 use crate::utils::env_utils;
 use async_trait::async_trait;
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
+use sqlx::types::chrono::NaiveDateTime;
 use sqlx::{ConnectOptions, Pool, Postgres};
 
 pub async fn open_connection() -> Pool<Postgres> {
@@ -26,5 +27,7 @@ pub async fn close_connection(pool: Pool<Postgres>) {
 
 #[async_trait]
 pub trait Persistable<T> {
-    async fn persist_one(&self, result: &T, pool: &Pool<Postgres>);
+    async fn create_one(&self, result: &T, pool: &Pool<Postgres>);
+
+    async fn get_last_timestamp(&self, pool: &Pool<Postgres>) -> Option<NaiveDateTime>;
 }

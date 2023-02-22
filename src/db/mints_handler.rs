@@ -2,14 +2,14 @@ use crate::db::db_handler::Persistable;
 use crate::model::mint::Mint;
 use async_trait::async_trait;
 use log::{error, info};
-use sqlx::types::chrono::DateTime;
-use sqlx::{Pool, Postgres, QueryBuilder};
+use sqlx::types::chrono::{DateTime, NaiveDateTime};
+use sqlx::{query_as, Pool, Postgres, QueryBuilder};
 
 pub struct MintSaver;
 
 #[async_trait]
 impl Persistable<Mint> for MintSaver {
-    async fn persist_one(&self, mint: &Mint, pool: &Pool<Postgres>) {
+    async fn create_one(&self, mint: &Mint, pool: &Pool<Postgres>) {
         let mint_result = &mint.result;
         let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
             "insert into mint (transaction_id, status, wallet, token_type, token_id, minted_on) ",
@@ -25,7 +25,9 @@ impl Persistable<Mint> for MintSaver {
                 .push_bind(DateTime::parse_from_rfc3339(&res.minted_on).unwrap());
         });
 
-        let query = query_builder.build();
+        let query = query_builder
+            .push(" ON CONFLICT (transaction_id) DO NOTHING")
+            .build();
         match query.execute(pool).await {
             Ok(result) => {
                 info!("Inserted {} rows", result.rows_affected())
@@ -34,5 +36,17 @@ impl Persistable<Mint> for MintSaver {
                 error!("Couldn't insert values due to {}", e)
             }
         }
+    }
+
+    async fn get_last_timestamp(&self, pool: &Pool<Postgres>) -> Option<NaiveDateTime> {
+        let result: (Option<NaiveDateTime>,) = query_as("select max(minted_on) from mint")
+            .fetch_one(pool)
+            .await
+            .unwrap_or_else(|e| {
+                error!("Couldn't fetch data! {}", e);
+                (None,)
+            });
+
+        result.0
     }
 }

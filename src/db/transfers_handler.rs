@@ -1,16 +1,15 @@
-use crate::db::db_handler;
 use crate::db::db_handler::Persistable;
 use crate::model::transfer::Transfer;
 use async_trait::async_trait;
 use log::{error, info};
 use sqlx::types::chrono::{DateTime, NaiveDateTime};
-use sqlx::{query_as, FromRow, Pool, Postgres, QueryBuilder};
+use sqlx::{query_as, Pool, Postgres, QueryBuilder};
 
 pub struct TransferSaver;
 
 #[async_trait]
 impl Persistable<Transfer> for TransferSaver {
-    async fn persist_one(&self, transfer: &Transfer, pool: &Pool<Postgres>) {
+    async fn create_one(&self, transfer: &Transfer, pool: &Pool<Postgres>) {
         let transfer_result = &transfer.result;
         let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
             "insert into transfer (transaction_id, status, wallet_from, wallet_to, token_id, token_address, created_on) ",
@@ -39,27 +38,16 @@ impl Persistable<Transfer> for TransferSaver {
             }
         }
     }
-}
 
-pub async fn fetch_last_created_on() -> Option<NaiveDateTime> {
-    let pool = db_handler::open_connection().await;
-    let result =
-        match query_as::<Postgres, CreatedOn>("select max(created_on) as created_on from transfer")
-            .fetch_one(&pool)
+    async fn get_last_timestamp(&self, pool: &Pool<Postgres>) -> Option<NaiveDateTime> {
+        let result: (Option<NaiveDateTime>,) = query_as("select max(created_on) from transfer")
+            .fetch_one(pool)
             .await
-        {
-            Ok(result) => result.created_on,
-            Err(e) => {
-                error!("Error fetching data: {}", e);
-                None
-            }
-        };
-    db_handler::close_connection(pool).await;
+            .unwrap_or_else(|e| {
+                error!("Couldn't fetch data! {}", e);
+                (None,)
+            });
 
-    result
-}
-
-#[derive(FromRow)]
-struct CreatedOn {
-    created_on: Option<NaiveDateTime>,
+        result.0
+    }
 }

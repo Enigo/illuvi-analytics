@@ -4,20 +4,29 @@ use crate::model::shared::PaginatedApi;
 use log::{error, info};
 use serde::de::DeserializeOwned;
 
+const FALLBACK_LAST_TIMESTAMP: &str = "2000-01-12T02:00:00Z";
+
 pub async fn fetch_and_persist_all_api_responses_with_cursor<T: DeserializeOwned + PaginatedApi>(
     url: &str,
+    last_timestamp_url_param: &str,
     persistable: &dyn Persistable<T>,
 ) {
     let pool = db_handler::open_connection().await;
+    let last_timestamp = match persistable.get_last_timestamp(&pool).await {
+        None => String::from(FALLBACK_LAST_TIMESTAMP),
+        Some(value) => value.format("%Y-%m-%dT%H:%M:%SZ").to_string(),
+    };
+    let complete_url = format!("{}&{}={}", url, last_timestamp_url_param, last_timestamp);
+
     let mut cursor = None;
     loop {
-        let result = fetch_and_get_result::<T>(url, cursor).await;
+        let result = fetch_and_get_result::<T>(complete_url.as_str(), cursor).await;
         if result.is_none() {
             break;
         } else {
             let res = result.unwrap();
             if res.has_results() {
-                persistable.persist_one(&res, &pool).await;
+                persistable.create_one(&res, &pool).await;
             }
             cursor = Some(res.get_cursor());
         }

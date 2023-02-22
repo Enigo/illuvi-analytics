@@ -1,18 +1,16 @@
-use crate::db::db_handler;
 use crate::db::db_handler::Persistable;
 use crate::model::order::Order;
 use crate::utils::price_utils;
 use async_trait::async_trait;
 use log::{error, info};
 use sqlx::types::chrono::{DateTime, NaiveDateTime};
-use sqlx::{query, query_as, FromRow, Pool, Postgres, QueryBuilder};
-use std::collections::HashSet;
+use sqlx::{query, query_as, query_scalar, Pool, Postgres, QueryBuilder};
 
 pub struct OrderSaver;
 
 #[async_trait]
 impl Persistable<Order> for OrderSaver {
-    async fn persist_one(&self, order: &Order, pool: &Pool<Postgres>) {
+    async fn create_one(&self, order: &Order, pool: &Pool<Postgres>) {
         let order_result = &order.result;
         let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
             "insert into order_data (order_id, status, wallet_from, token_id, token_address, buy_currency, buy_price, created_on, updated_on) ",
@@ -37,7 +35,8 @@ impl Persistable<Order> for OrderSaver {
                 .push_bind(DateTime::parse_from_rfc3339(&res.updated_timestamp).unwrap());
         });
 
-        let query = query_builder.push(" ON CONFLICT (order_id) DO UPDATE SET status = EXCLUDED.status, buy_price = EXCLUDED.buy_price;").build();
+        let query = query_builder.push(
+            " ON CONFLICT (order_id) DO UPDATE SET status = EXCLUDED.status, updated_on = EXCLUDED.updated_on;").build();
         match query.execute(pool).await {
             Ok(result) => {
                 info!("Inserted {} rows", result.rows_affected())
@@ -47,46 +46,35 @@ impl Persistable<Order> for OrderSaver {
             }
         }
     }
-}
 
-pub async fn fetch_last_updated_on() -> Option<NaiveDateTime> {
-    let pool = db_handler::open_connection().await;
-    let result = match query_as::<Postgres, UpdatedOn>(
-        "select max(updated_on) as updated_on from order_data",
-    )
-    .fetch_one(&pool)
-    .await
-    {
-        Ok(result) => result.updated_on,
-        Err(e) => {
-            error!("Error fetching data: {}", e);
-            None
-        }
-    };
-    db_handler::close_connection(pool).await;
+    async fn get_last_timestamp(&self, pool: &Pool<Postgres>) -> Option<NaiveDateTime> {
+        let result: (Option<NaiveDateTime>,) = query_as("select max(updated_on) from order_data")
+            .fetch_one(pool)
+            .await
+            .unwrap_or_else(|e| {
+                error!("Couldn't fetch data! {}", e);
+                (None,)
+            });
 
-    result
+        result.0
+    }
 }
 
 pub async fn fetch_all_order_ids_for_buy_currency(
     buy_currency: &str,
     pool: &Pool<Postgres>,
-) -> Option<HashSet<i32>> {
-    let result = match query_as::<Postgres, OrderId>(
-        "select order_id from order_data where buy_currency = $1",
-    )
-    .bind(buy_currency)
-    .fetch_all(pool)
-    .await
+) -> Option<Vec<i32>> {
+    return match query_scalar("select order_id from order_data where buy_currency = $1")
+        .bind(buy_currency)
+        .fetch_all(pool)
+        .await
     {
-        Ok(result) => Some(result.iter().map(|order| order.order_id).collect()),
+        Ok(order_ids) => Some(order_ids),
         Err(e) => {
-            error!("Error fetching data: {}", e);
+            error!("Couldn't fetch ids for currency {}! {}", buy_currency, e);
             None
         }
     };
-
-    result
 }
 
 pub async fn update_buy_currency_for_order_id(
@@ -111,42 +99,40 @@ pub async fn update_buy_currency_for_order_id(
 
 pub async fn fetch_all_filled_token_ids_with_no_wallet_to_and_no_sell_price(
     pool: &Pool<Postgres>,
-) -> Option<HashSet<i32>> {
-    let result = match query_as::<Postgres, TokenId>(
-        "select distinct(token_id) from order_data where status = 'filled' and wallet_to is null and sell_price is null",
+) -> Option<Vec<i32>> {
+    return match query_scalar(
+        "select distinct(token_id) from order_data where status = 'filled' and wallet_to is null and sell_price is null"
     )
         .fetch_all(pool)
-        .await
-    {
-        Ok(result) => Some(result.iter().map(|order| order.token_id).collect()),
+        .await {
+        Ok(token_ids) => {
+            Some(token_ids)
+        }
         Err(e) => {
             error!("Error fetching data: {}", e);
             None
         }
     };
-
-    result
 }
 
 pub async fn fetch_all_filled_order_ids_with_no_wallet_to_and_no_sell_price_for_token_id(
     token_id: i32,
     pool: &Pool<Postgres>,
-) -> Option<HashSet<i32>> {
-    let result = match query_as::<Postgres, OrderId>(
-        "select distinct(order_id) from order_data where status = 'filled' and wallet_to is null and sell_price is null and token_id = $1",
+) -> Option<Vec<i32>> {
+    return match query_scalar(
+        "select order_id from order_data where status = 'filled' and wallet_to is null and sell_price is null and token_id = $1"
     )
         .bind(token_id)
         .fetch_all(pool)
-        .await
-    {
-        Ok(result) => Some(result.iter().map(|order| order.order_id).collect()),
+        .await {
+        Ok(token_ids) => {
+            Some(token_ids)
+        }
         Err(e) => {
             error!("Error fetching data: {}", e);
             None
         }
     };
-
-    result
 }
 
 pub async fn update_wallet_to_and_sell_price_for_order_id(
@@ -169,19 +155,4 @@ pub async fn update_wallet_to_and_sell_price_for_order_id(
             error!("Error updating order_id {}: {}", order_id, e);
         }
     }
-}
-
-#[derive(FromRow)]
-struct OrderId {
-    order_id: i32,
-}
-
-#[derive(FromRow)]
-struct TokenId {
-    token_id: i32,
-}
-
-#[derive(FromRow)]
-struct UpdatedOn {
-    updated_on: Option<NaiveDateTime>,
 }

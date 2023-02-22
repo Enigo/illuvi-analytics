@@ -6,6 +6,11 @@ const MINTS_URL: &str = "https://api.x.immutable.com/v1/mints?token_address=0x9e
 
 pub async fn read_mints() {
     if env_utils::as_parsed::<bool>("MINTS_ENABLED") {
-        api_utils::fetch_and_persist_all_api_responses_with_cursor(MINTS_URL, &MintSaver).await
+        api_utils::fetch_and_persist_all_api_responses_with_cursor(
+            MINTS_URL,
+            "min_timestamp",
+            &MintSaver,
+        )
+        .await
     }
 }
