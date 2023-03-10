@@ -1,0 +1,1 @@
+alter table mint add column token_address varchar(255);

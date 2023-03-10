@@ -38,4 +38,5 @@ pub struct Token {
 #[derive(Deserialize, Debug)]
 pub struct Data {
     pub token_id: String,
+    pub token_address: String,
 }
