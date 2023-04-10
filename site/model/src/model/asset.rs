@@ -18,7 +18,7 @@ pub struct MintData {
 
 #[derive(Serialize, Deserialize)]
 pub struct TransactionData {
-    pub id: i32,
+    pub id: Option<i32>,
     pub wallet_from: String,
     pub wallet_to: String,
     pub event: String,

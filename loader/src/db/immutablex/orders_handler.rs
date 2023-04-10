@@ -97,11 +97,11 @@ pub async fn update_buy_currency_for_order_id(
     }
 }
 
-pub async fn fetch_all_filled_token_ids_with_no_wallet_to_and_no_sell_price(
+pub async fn fetch_all_filled_token_ids_with_no_wallet_to_or_no_sell_price_or_transaction_id(
     pool: &Pool<Postgres>,
 ) -> Option<Vec<i32>> {
     return match query_scalar(
-        "select distinct(token_id) from order_data where status = 'filled' and wallet_to is null and sell_price is null"
+        "select distinct(token_id) from order_data where status = 'filled' and (wallet_to is null or sell_price is null or transaction_id is null)"
     )
         .fetch_all(pool)
         .await {
@@ -115,12 +115,12 @@ pub async fn fetch_all_filled_token_ids_with_no_wallet_to_and_no_sell_price(
     };
 }
 
-pub async fn fetch_all_filled_order_ids_with_no_wallet_to_and_no_sell_price_for_token_id(
+pub async fn fetch_all_filled_order_ids_with_no_wallet_to_or_no_sell_price_or_transaction_id_for_token_id(
     token_id: i32,
     pool: &Pool<Postgres>,
 ) -> Option<Vec<i32>> {
     return match query_scalar(
-        "select order_id from order_data where status = 'filled' and wallet_to is null and sell_price is null and token_id = $1"
+        "select order_id from order_data where status = 'filled' and (wallet_to is null or sell_price is null or transaction_id is null) and token_id = $1"
     )
         .bind(token_id)
         .fetch_all(pool)
@@ -135,15 +135,17 @@ pub async fn fetch_all_filled_order_ids_with_no_wallet_to_and_no_sell_price_for_
     };
 }
 
-pub async fn update_wallet_to_and_sell_price_for_order_id(
+pub async fn update_wallet_to_and_sell_price_and_transaction_id_for_order_id(
     order_id: i32,
     wallet_to: String,
     sell_price: f32,
+    transaction_id: i32,
     pool: &Pool<Postgres>,
 ) {
-    match query("update order_data set wallet_to = $1, sell_price = $2 where order_id = $3")
+    match query("update order_data set wallet_to = $1, sell_price = $2, transaction_id = $3 where order_id = $4")
         .bind(wallet_to)
         .bind(sell_price)
+        .bind(transaction_id)
         .bind(order_id)
         .execute(pool)
         .await

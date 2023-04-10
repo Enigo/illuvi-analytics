@@ -109,7 +109,7 @@ async fn get_all_order_data_for_token_address_and_token_id(
     token_id: &i32,
 ) -> Option<Vec<TransactionData>> {
     let result: Option<Vec<OrderDataDb>> = match query_as(
-        "select order_id, status, wallet_from, wallet_to, updated_on from order_data where token_address=$1 and token_id=$2")
+        "select transaction_id, status, wallet_from, wallet_to, updated_on from order_data where token_address=$1 and token_id=$2")
         .bind(token_address)
         .bind(token_id)
         .fetch_all(pool)
@@ -152,7 +152,7 @@ struct LandAssetDb {
 
 #[derive(FromRow)]
 struct TransferDataDb {
-    transaction_id: i32,
+    transaction_id: Option<i32>,
     wallet_from: String,
     wallet_to: String,
     created_on: NaiveDateTime,
@@ -172,7 +172,7 @@ impl From<TransferDataDb> for TransactionData {
 
 #[derive(FromRow)]
 struct OrderDataDb {
-    order_id: i32,
+    transaction_id: Option<i32>,
     wallet_from: String,
     wallet_to: Option<String>,
     status: String,
@@ -182,7 +182,7 @@ struct OrderDataDb {
 impl From<OrderDataDb> for TransactionData {
     fn from(order_data: OrderDataDb) -> Self {
         Self {
-            id: order_data.order_id,
+            id: order_data.transaction_id,
             wallet_from: order_data.wallet_from,
             wallet_to: order_data.wallet_to.unwrap_or_default(),
             event: format!("{} {}", "Trade", order_data.status),

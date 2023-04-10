@@ -79,8 +79,8 @@ async fn enrich_wallet_to_and_sell_price(pool: &Pool<Postgres>) {
         let all_trades = utils::fetch_all_api_responses_with_cursor::<Trade>(url.as_str()).await;
         for trade in all_trades {
             // all_trades return trades that might have been already updated (since it is all trades for the given token_id)
-            // need to query only order_ids with no wallet_to/sell_price
-            let unprocessed_orders = orders_handler::fetch_all_filled_order_ids_with_no_wallet_to_and_no_sell_price_for_token_id(token_id, &pool)
+            // need to query only order_ids with no wallet_to/sell_price/transaction_id
+            let unprocessed_orders = orders_handler::fetch_all_filled_order_ids_with_no_wallet_to_or_no_sell_price_or_transaction_id_for_token_id(token_id, &pool)
                 .await
                 .unwrap_or_default();
             for single_trade in trade.result {
@@ -90,13 +90,14 @@ async fn enrich_wallet_to_and_sell_price(pool: &Pool<Postgres>) {
                     match api_utils::fetch_single_api_response::<SingleOrder>(url.as_str()).await {
                         Ok(order) => {
                             let sell_data = order.sell.data;
-                            orders_handler::update_wallet_to_and_sell_price_for_order_id(
+                            orders_handler::update_wallet_to_and_sell_price_and_transaction_id_for_order_id(
                                 seller_order_id,
                                 order.wallet,
                                 price_utils::get_price(
                                     &sell_data.quantity,
                                     sell_data.decimals.unwrap(),
                                 ),
+                                single_trade.transaction_id,
                                 &pool,
                             )
                             .await;
@@ -110,12 +111,12 @@ async fn enrich_wallet_to_and_sell_price(pool: &Pool<Postgres>) {
         }
     }
 
-    match orders_handler::fetch_all_filled_token_ids_with_no_wallet_to_and_no_sell_price(&pool)
+    match orders_handler::fetch_all_filled_token_ids_with_no_wallet_to_or_no_sell_price_or_transaction_id(&pool)
         .await
     {
         Some(token_ids) => {
             info!(
-                "Updating wallet_to and sell_price for {} tokens",
+                "Updating wallet_to and sell_price and transaction_id for {} tokens",
                 token_ids.len()
             );
             let mut futures = futures::stream::iter(token_ids)
@@ -125,7 +126,7 @@ async fn enrich_wallet_to_and_sell_price(pool: &Pool<Postgres>) {
             while let Some(_) = futures.next().await {}
         }
         None => {
-            info!("No wallet_to and sell_price to upgrade!")
+            info!("No wallet_to or sell_price or transaction_id to upgrade!")
         }
     }
 }

@@ -1,0 +1,1 @@
+alter table order_data add column transaction_id integer;

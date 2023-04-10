@@ -174,8 +174,12 @@ pub fn asset_land_function_component(props: &Props) -> Html {
                         {
                             asset.transaction_data.iter().map(|transaction| {
                                 html!{
-                                    <tr key={transaction.id.to_string()}>
-                                        <th scope="row"><a href={format!("{}{}", IMMUTASCAN_TX, transaction.id)} class="text-decoration-none">{ transaction.id }</a></th>
+                                    <tr key={transaction.updated_on.to_string()}>
+                                        if {transaction.id == Option::None} {
+                                            <th scope="row" />
+                                        } else {
+                                            <th scope="row"><a href={format!("{}{}", IMMUTASCAN_TX, transaction.id.unwrap())} class="text-decoration-none">{ transaction.id.unwrap() }</a></th>
+                                        }
                                         <td>{ transaction.event.clone() }</td>
                                         <td><a href={format!("{}{}", IMMUTASCAN_WALLET, transaction.wallet_from.clone())} class="text-decoration-none">{ format_wallet(&transaction.wallet_from) }</a></td>
                                         <td><a href={format!("{}{}", IMMUTASCAN_WALLET, transaction.wallet_to.clone())} class="text-decoration-none">{ format_wallet(&transaction.wallet_to) }</a></td>

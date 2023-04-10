@@ -19,6 +19,7 @@ impl PaginatedApi for Trade {
 
 #[derive(Deserialize, Debug)]
 pub struct TheResult {
+    pub transaction_id: i32,
     #[serde(rename = "a")]
     pub buyer: Buyer,
     #[serde(rename = "b")]
