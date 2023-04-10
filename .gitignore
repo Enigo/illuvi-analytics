@@ -1,4 +1,5 @@
 .idea/
-*/target/*
+**/target
 *.iml
-loader/.env
+**.env
+**dist

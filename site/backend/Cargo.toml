@@ -1,0 +1,18 @@
+[package]
+name = "illuvi-analytics-backend"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "illuvi-analytics-backend"
+path = "src/main.rs"
+
+[dependencies]
+model = { path= "../model"}
+log = "0.4.0"
+env_logger = "0.10.0"
+dotenvy = "0.15.6"
+actix-web = "4.3.1"
+actix-cors = "0.6.4"
+serde = { version = "1.0.159", features = ["derive"] }
+sqlx = { version = "0.6.2", features = [ "runtime-actix-native-tls", "postgres", "chrono" ] }

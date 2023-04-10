@@ -25,3 +25,6 @@ Also, feature flags are stored there as well.
 
 Execute [start-local-environment.sh](environment/start-local-environment.sh) to spin up Postgres.
 It will execute required DB migrations.
+
+### Site UI
+Run `trunk serve`to start the application
