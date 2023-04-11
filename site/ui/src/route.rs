@@ -1,6 +1,4 @@
-use crate::view::asset::AssetLand;
-use crate::view::home::Home;
-use crate::view::collection::Collection;
+use crate::view::{asset::AssetLand, home::Home, collection::Collection};
 use yew::prelude::*;
 use yew_router::prelude::*;
 

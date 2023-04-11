@@ -627,6 +627,7 @@ dependencies = [
 name = "illuvi-analytics-ui"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "log",
  "model",
  "reqwest",
