@@ -7,7 +7,9 @@ use serde::de::DeserializeOwned;
 
 const FALLBACK_LAST_TIMESTAMP: &str = "2000-01-12T02:00:00Z";
 
-pub async fn fetch_and_persist_all_api_responses_with_cursor<T: DeserializeOwned + PaginatedApi>(
+pub async fn fetch_and_persist_all_api_responses_with_cursor_and_last_timestamp<
+    T: DeserializeOwned + PaginatedApi,
+>(
     url: &str,
     last_timestamp_url_param: &str,
     persistable: &dyn Persistable<T>,

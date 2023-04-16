@@ -7,7 +7,7 @@ const TRANSFERS_URL: &str = "https://api.x.immutable.com/v1/transfers?token_addr
 
 pub async fn read_transfers() {
     if env_utils::as_parsed::<bool>("TRANSFERS_ENABLED") {
-        utils::fetch_and_persist_all_api_responses_with_cursor::<Transfer>(
+        utils::fetch_and_persist_all_api_responses_with_cursor_and_last_timestamp::<Transfer>(
             TRANSFERS_URL,
             "min_timestamp",
             &TransferSaver,

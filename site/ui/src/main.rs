@@ -3,7 +3,7 @@ use route::{switch, Route};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::view::footer::Footer;
+use crate::view::{footer::Footer, header::Header};
 
 mod route;
 mod utils;
@@ -13,6 +13,7 @@ mod view;
 fn app() -> Html {
     html! {
          <BrowserRouter>
+            <Header />
             <Switch<Route> render={switch} />
             <Footer />
         </BrowserRouter>

@@ -8,7 +8,7 @@ const ASSETS_URL: &str =
 
 pub async fn read_assets() {
     if env_utils::as_parsed::<bool>("ASSETS_ENABLED") {
-        utils::fetch_and_persist_all_api_responses_with_cursor::<Asset>(
+        utils::fetch_and_persist_all_api_responses_with_cursor_and_last_timestamp::<Asset>(
             ASSETS_URL,
             "updated_min_timestamp",
             &AssetSaver,

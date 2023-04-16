@@ -1,4 +1,5 @@
 pub mod asset;
+pub mod collection;
 pub mod mint;
 pub mod order;
 pub mod shared;

@@ -64,8 +64,11 @@ async fn fetch_coins(pool: &Pool<Postgres>) {
 async fn fetch_coins_history(pool: &Pool<Postgres>) {
     async fn process_date(date: &NaiveDate, symbol_id: &String, pool: &Pool<Postgres>) {
         // format macro cannot be used with consts
-        let url = HISTORY_ENDPOINT.replacen("{}", symbol_id, 1)
-            .replacen("{}", date.format("%d-%m-%Y").to_string().as_str(), 1);
+        let url = HISTORY_ENDPOINT.replacen("{}", symbol_id, 1).replacen(
+            "{}",
+            date.format("%d-%m-%Y").to_string().as_str(),
+            1,
+        );
         match api_utils::fetch_single_api_response::<CoinHistory>(url.as_str()).await {
             Ok(coin_history) => {
                 info!("Processing response from {url}");

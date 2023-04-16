@@ -1,5 +1,6 @@
 use crate::controller::assets_controller::get_asset;
-use crate::controller::mints_controller::{get_all_token_addresses, get_mints};
+use crate::controller::collection_controller::get_collections;
+use crate::controller::mints_controller::get_mints;
 use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 use dotenvy::dotenv;
@@ -18,8 +19,8 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .service(get_mints)
-            .service(get_all_token_addresses)
             .service(get_asset)
+            .service(get_collections)
             // cors need to be configured correctly
             .wrap(Cors::permissive())
     })

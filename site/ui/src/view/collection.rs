@@ -1,5 +1,5 @@
-use log::error;
 use crate::utils::api_utils;
+use log::error;
 use model::model::mint::MintData;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -24,7 +24,7 @@ pub fn collection_function_component(props: &Props) -> Html {
                 let mints = mints.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<Vec<MintData>>(
-                        format!("/mint/mints?token_address={}", token_address).as_str(),
+                        format!("/mint/mints?token_address={}", token_address.clone()).as_str(),
                     )
                     .await
                     {
@@ -38,7 +38,7 @@ pub fn collection_function_component(props: &Props) -> Html {
                 });
                 || ()
             },
-            (),
+            props.token_address.clone(),
         );
     }
 

@@ -18,7 +18,7 @@ const ERC20: &str = "ERC20";
 
 pub async fn read_orders() {
     if env_utils::as_parsed::<bool>("ORDERS_ENABLED") {
-        utils::fetch_and_persist_all_api_responses_with_cursor::<Order>(
+        utils::fetch_and_persist_all_api_responses_with_cursor_and_last_timestamp::<Order>(
             ORDERS_URL,
             "updated_min_timestamp",
             &OrderSaver,
