@@ -1,7 +1,7 @@
 use crate::db::db_handler;
 use log::error;
-use model::model::asset::{AssetData, LandAssetData, MintData, TransactionData};
-use sqlx::types::chrono::NaiveDateTime;
+use model::model::asset::{AssetData, LandAssetData, MintData, Price, TransactionData};
+use sqlx::types::{chrono::NaiveDateTime, Decimal};
 use sqlx::{query_as, FromRow, PgPool};
 
 pub async fn get_asset_data_for_token_address_and_token_id(
@@ -12,7 +12,7 @@ pub async fn get_asset_data_for_token_address_and_token_id(
     let transaction_data = get_all_transaction_data(&pool, token_address, token_id).await;
 
     let land_asset: Option<LandAssetDb> = match query_as(
-        "select a.token_id, a.token_address, a.current_owner, a.updated_on, a.name, a.tier,\
+        "select a.token_id, a.token_address, a.current_owner, a.created_on, a.name, a.tier,\
          a.solon, a.carbon, a.crypton, a.silicon, a.hydrogen, a.hyperion, a.landmark, m.transaction_id, m.wallet, m.minted_on \
          from asset a join mint m on a.token_id=m.token_id where a.token_address=$1 and a.token_id=$2")
         .bind(token_address)
@@ -28,29 +28,43 @@ pub async fn get_asset_data_for_token_address_and_token_id(
     };
 
     let result = match land_asset {
-        Some(res) => Some(LandAssetData {
-            asset_data: AssetData {
-                token_id: res.token_id,
-                token_address: res.token_address,
-                current_owner: res.current_owner,
-                last_owner_change: res.updated_on,
-            },
-            mint_data: MintData {
-                transaction_id: res.transaction_id,
-                wallet: res.wallet,
-                minted_on: res.minted_on,
-            },
-            transaction_data,
-            name: res.name,
-            tier: res.tier,
-            solon: res.solon,
-            carbon: res.carbon,
-            crypton: res.crypton,
-            silicon: res.silicon,
-            hydrogen: res.hydrogen,
-            hyperion: res.hyperion,
-            landmark: res.landmark,
-        }),
+        Some(res) => {
+            fn get_last_owner_change(
+                transaction_data: &Vec<TransactionData>,
+                default: NaiveDateTime,
+            ) -> NaiveDateTime {
+                return match transaction_data.iter().find(|data| {
+                    !data.event.contains("cancelled") && !data.event.contains("active")
+                }) {
+                    Some(data) => data.updated_on,
+                    None => default,
+                };
+            }
+
+            Some(LandAssetData {
+                asset_data: AssetData {
+                    token_id: res.token_id,
+                    token_address: res.token_address,
+                    current_owner: res.current_owner,
+                    last_owner_change: get_last_owner_change(&transaction_data, res.created_on),
+                },
+                mint_data: MintData {
+                    transaction_id: res.transaction_id,
+                    wallet: res.wallet,
+                    minted_on: res.minted_on,
+                },
+                transaction_data,
+                name: res.name,
+                tier: res.tier,
+                solon: res.solon,
+                carbon: res.carbon,
+                crypton: res.crypton,
+                silicon: res.silicon,
+                hydrogen: res.hydrogen,
+                hyperion: res.hyperion,
+                landmark: res.landmark,
+            })
+        }
         None => None,
     };
 
@@ -109,7 +123,7 @@ async fn get_all_order_data_for_token_address_and_token_id(
     token_id: &i32,
 ) -> Option<Vec<TransactionData>> {
     let result: Option<Vec<OrderDataDb>> = match query_as(
-        "select transaction_id, status, wallet_from, wallet_to, updated_on from order_data where token_address=$1 and token_id=$2")
+        "select transaction_id, status, wallet_from, wallet_to, updated_on, buy_currency, buy_price, sell_price from order_data where token_address=$1 and token_id=$2")
         .bind(token_address)
         .bind(token_id)
         .fetch_all(pool)
@@ -135,7 +149,7 @@ struct LandAssetDb {
     token_id: i32,
     token_address: String,
     current_owner: String,
-    updated_on: NaiveDateTime,
+    created_on: NaiveDateTime,
     name: String,
     tier: i32,
     solon: i32,
@@ -166,6 +180,7 @@ impl From<TransferDataDb> for TransactionData {
             wallet_to: transfer_data.wallet_to,
             event: "Transfer".to_string(),
             updated_on: transfer_data.created_on,
+            price: None,
         }
     }
 }
@@ -177,6 +192,9 @@ struct OrderDataDb {
     wallet_to: Option<String>,
     status: String,
     updated_on: NaiveDateTime,
+    buy_currency: String,
+    buy_price: Decimal,
+    sell_price: Option<Decimal>,
 }
 
 impl From<OrderDataDb> for TransactionData {
@@ -187,6 +205,19 @@ impl From<OrderDataDb> for TransactionData {
             wallet_to: order_data.wallet_to.unwrap_or_default(),
             event: format!("{} {}", "Trade", order_data.status),
             updated_on: order_data.updated_on,
+            price: Some(Price {
+                currency: order_data.buy_currency,
+                price: if order_data.sell_price.is_some() {
+                    order_data
+                        .sell_price
+                        .unwrap()
+                        .to_string()
+                        .parse::<f32>()
+                        .unwrap()
+                } else {
+                    order_data.buy_price.to_string().parse::<f32>().unwrap()
+                },
+            }),
         }
     }
 }

@@ -23,6 +23,13 @@ pub struct TransactionData {
     pub wallet_to: String,
     pub event: String,
     pub updated_on: NaiveDateTime,
+    pub price: Option<Price>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Price {
+    pub price: f32,
+    pub currency: String,
 }
 
 #[derive(Serialize, Deserialize)]

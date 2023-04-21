@@ -13,7 +13,6 @@ pub fn home_function_component() -> Html {
         let collections = collections.clone();
         use_effect_with_deps(
             move |_| {
-                let collections = collections.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<Vec<CollectionData>>(
                         "/collection/collections",
@@ -28,14 +27,13 @@ pub fn home_function_component() -> Html {
                         }
                     }
                 });
-                || ()
             },
             (),
         );
     }
 
     let collections = collections.iter().map(|collection| html! {
-            <div class="col">
+            <div class="col text-center">
                 <Link<Route> to={Route::Collection {token_address: collection.address.clone()} } classes="img-fluid">
                     <img src={collection.collection_image_url.clone()} class="img-fluid" width="250" height="250" alt={collection.name.clone()}/>
                 </Link<Route>>
@@ -44,11 +42,9 @@ pub fn home_function_component() -> Html {
         }).collect::<Html>();
 
     return html! {
-        <div class="grid-container">
-            <div class="container mt-4">
-                 <div class="row justify-content-md-center">
-                    { collections }
-                </div>
+        <div class="container mt-4">
+             <div class="row justify-content-md-center">
+                { collections }
             </div>
         </div>
     };

@@ -21,7 +21,6 @@ pub fn collection_function_component(props: &Props) -> Html {
         let mints = mints.clone();
         use_effect_with_deps(
             move |_| {
-                let mints = mints.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<Vec<MintData>>(
                         format!("/mint/mints?token_address={}", token_address.clone()).as_str(),
@@ -36,7 +35,6 @@ pub fn collection_function_component(props: &Props) -> Html {
                         }
                     }
                 });
-                || ()
             },
             props.token_address.clone(),
         );
@@ -50,7 +48,7 @@ pub fn collection_function_component(props: &Props) -> Html {
                 mints.iter().map(|mint| {
                     html!
                     {
-                        <div class="col">
+                        <div class="col text-center">
                             <Link<Route> to={Route::Asset {token_address: mint.token_address.to_string(), token_id: mint.token_id} } classes="img-fluid">
                                 <img src={format!("{}{}{}", LAND_ICON, mint.token_id, ".svg")}
                                 class="img-fluid"
@@ -65,10 +63,8 @@ pub fn collection_function_component(props: &Props) -> Html {
         }).collect::<Html>();
 
     return html! {
-        <div class="grid-container">
-            <div class="container mt-4">
-                {mints}
-            </div>
+        <div class="container mt-4">
+            {mints}
         </div>
     };
 }

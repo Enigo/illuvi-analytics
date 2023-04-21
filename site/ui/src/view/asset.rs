@@ -1,6 +1,7 @@
 use crate::utils::api_utils;
+use chrono::NaiveDateTime;
 use log::error;
-use model::model::asset::LandAssetData;
+use model::model::asset::{LandAssetData, Price};
 use yew::prelude::*;
 
 const LAND_ICON: &str = "https://assets.illuvium-game.io/illuvidex/land/land-";
@@ -22,7 +23,6 @@ pub fn asset_land_function_component(props: &Props) -> Html {
         let asset = asset.clone();
         use_effect_with_deps(
             move |_| {
-                let asset = asset.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<LandAssetData>(
                         format!(
@@ -41,7 +41,6 @@ pub fn asset_land_function_component(props: &Props) -> Html {
                         }
                     }
                 });
-                || ()
             },
             (),
         );
@@ -68,9 +67,7 @@ pub fn asset_land_function_component(props: &Props) -> Html {
         }
         None => {
             html! {
-                <>
-                    {"No data yet!"}
-                </>
+                <p class="text-white fs-4 mb-2">{"No data yet!"}</p>
             }
         }
     };
@@ -96,7 +93,7 @@ pub fn asset_land_function_component(props: &Props) -> Html {
                           { format_wallet(&asset.asset_data.current_owner) }
                       </a>
                   </p>
-                  <p class="text-white fs-4 mb-2">{format!("Last owner change: {}", asset.asset_data.last_owner_change)}</p>
+                  <p class="text-white fs-4 mb-2">{format!("Last owner change: {}", format_date(asset.asset_data.last_owner_change))}</p>
                 </div>
               </div>
             </div>
@@ -154,19 +151,42 @@ pub fn asset_land_function_component(props: &Props) -> Html {
     }
 
     fn events(asset: &LandAssetData) -> Html {
+        fn format_price(price: &Price) -> Html {
+            let price_html = html!(format!(" {} ", price.price));
+            let currency = price.currency.as_str();
+            return match currency {
+                "ETH" => {
+                    html!(
+                    <>
+                        <i class="fab fa-ethereum"></i> {price_html}
+                    </>)
+                }
+                "USDC" => {
+                    html!(
+                    <>
+                        <i class="usdc_icon"></i> {price_html}
+                    </>)
+                }
+                _ => {
+                    html!(<p class="text-white">{price_html}{currency}</p>)
+                }
+            };
+        }
+
         html!(
             <div class="row my-3 p-3 bg-dark">
                 <div class="col-12">
                     <p class="text-white fs-3 mb-4">{"Events"}</p>
                 </div>
                 <div class="col-md text-center">
-                    <table class="table text-white">
+                    <table class="table text-white border-secondary">
                       <thead>
                         <tr>
                           <th scope="col">{"Id"}</th>
                           <th scope="col">{"Event"}</th>
                           <th scope="col">{"Wallet From"}</th>
                           <th scope="col">{"Wallet To"}</th>
+                          <th scope="col">{"Price"}</th>
                           <th scope="col">{"Date"}</th>
                         </tr>
                       </thead>
@@ -183,7 +203,12 @@ pub fn asset_land_function_component(props: &Props) -> Html {
                                         <td>{ transaction.event.clone() }</td>
                                         <td><a href={format!("{}{}", IMMUTASCAN_WALLET, transaction.wallet_from.clone())} class="text-decoration-none">{ format_wallet(&transaction.wallet_from) }</a></td>
                                         <td><a href={format!("{}{}", IMMUTASCAN_WALLET, transaction.wallet_to.clone())} class="text-decoration-none">{ format_wallet(&transaction.wallet_to) }</a></td>
-                                        <td>{ transaction.updated_on.to_string() }</td>
+                                        if let Some(price) = &transaction.price {
+                                            <td>{ format_price(&price) }</td>
+                                        } else {
+                                            <td></td>
+                                        }
+                                        <td>{ format_date(transaction.updated_on) }</td>
                                     </tr>
                                  }
                             }).collect::<Html>()
@@ -193,7 +218,8 @@ pub fn asset_land_function_component(props: &Props) -> Html {
                             <td>{ "Mint" }</td>
                             <td></td>
                             <td ><a href={format!("{}{}", IMMUTASCAN_WALLET, asset.mint_data.wallet.clone())} class="text-decoration-none">{ format_wallet(&asset.mint_data.wallet) }</a></td>
-                            <td>{ asset.mint_data.minted_on }</td>
+                            <td></td>
+                            <td>{ format_date(asset.mint_data.minted_on) }</td>
                         </tr>
                       </tbody>
                     </table>
@@ -207,5 +233,9 @@ pub fn asset_land_function_component(props: &Props) -> Html {
             return "".to_string();
         }
         return format!("{}...{}", &wallet[0..6], &wallet[wallet.len() - 4..]);
+    }
+
+    fn format_date(date: NaiveDateTime) -> String {
+        date.format("%Y-%m-%d %H:%M:%S").to_string()
     }
 }
