@@ -3,7 +3,7 @@ use crate::model::immutablex::mint::Mint;
 use async_trait::async_trait;
 use log::{error, info};
 use sqlx::types::chrono::{DateTime, NaiveDateTime};
-use sqlx::{query_as, Pool, Postgres, QueryBuilder};
+use sqlx::{query, query_as, query_scalar, Pool, Postgres, QueryBuilder};
 
 pub struct MintSaver;
 
@@ -50,5 +50,69 @@ impl Persistable<Mint> for MintSaver {
             });
 
         result.0
+    }
+}
+
+pub async fn fetch_all_lands_with_no_price_or_currency(
+    pool: &Pool<Postgres>,
+) -> Option<Vec<String>> {
+    return match query_scalar(
+        "select distinct(wallet) from mint where (price is null or currency is null) and token_address='0x9e0d99b864e1ac12565125c5a82b59adea5a09cd'"
+    )
+        .fetch_all(pool)
+        .await {
+        Ok(wallets) => {
+            Some(wallets)
+        }
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            None
+        }
+    };
+}
+
+pub async fn update_price_and_currency_for_wallet(
+    wallet: &str,
+    price: f32,
+    currency: String,
+    pool: &Pool<Postgres>,
+) {
+    match query("update mint set price = $1, currency = $2 where wallet = $3")
+        .bind(price)
+        .bind(currency)
+        .bind(wallet)
+        .execute(pool)
+        .await
+    {
+        Ok(_) => {
+            info!("Updated wallet {wallet}")
+        }
+        Err(e) => {
+            error!("Error updating order_id {wallet}: {e}");
+        }
+    }
+}
+
+pub async fn update_price_and_currency_for_wallet_and_token_id(
+    wallet: &str,
+    price: f32,
+    currency: String,
+    token_id: &i32,
+    pool: &Pool<Postgres>,
+) {
+    match query("update mint set price = $1, currency = $2 where wallet = $3 and token_id = $4")
+        .bind(price)
+        .bind(currency)
+        .bind(wallet)
+        .bind(token_id)
+        .execute(pool)
+        .await
+    {
+        Ok(_) => {
+            info!("Updated wallet {wallet} and token_id {token_id}")
+        }
+        Err(e) => {
+            error!("Error updating order_id {wallet} and token_id {token_id}: {e}");
+        }
     }
 }

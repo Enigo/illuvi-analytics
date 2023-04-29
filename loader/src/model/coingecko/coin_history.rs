@@ -4,7 +4,7 @@ use serde::Deserialize;
 pub struct CoinHistory {
     pub id: String,
     pub symbol: String,
-    pub market_data: MarketData,
+    pub market_data: Option<MarketData>,
 }
 
 #[derive(Deserialize, Debug)]

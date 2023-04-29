@@ -16,6 +16,10 @@ ImmutableX API has a rate limit of 5RPC, see [api-rate-limiting](https://docs.x.
 prices.
 CoinGecko free API has a rate limit of 10-30 calls/minute
 
+### Etherscan
+[Etherscan API](https://docs.etherscan.io/api-endpoints/accounts) is used to query initial Land mint data
+Etherscan Free plan has a rate limit of 5RPC and 100 000 request per day
+
 ## Env
 
 The `dotenvy` crate is used to load environment variables needed for DB connection from `.env` file

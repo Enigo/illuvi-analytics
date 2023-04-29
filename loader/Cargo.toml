@@ -17,3 +17,5 @@ futures = { version = "0.3.25"}
 sqlx = { version = "0.6.2", features = [ "runtime-tokio-native-tls" , "postgres", "chrono" ] }
 serde = { version = "1.0.159", features = ["derive"] }
 async-trait = "0.1.64"
+ethabi = "18.0.0"
+rust_decimal = "1.29.1"

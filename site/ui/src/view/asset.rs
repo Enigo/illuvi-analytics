@@ -152,7 +152,13 @@ pub fn asset_land_function_component(props: &Props) -> Html {
 
     fn events(asset: &LandAssetData) -> Html {
         fn format_price(price: &Price) -> Html {
-            let price_html = html!(format!(" {} ", price.price));
+            let price_value = price.price;
+            let formatted_price_value = if price_value.fract() == 0.0 {
+                format!("{:.1}", price_value)
+            } else {
+                format!("{}", price_value)
+            };
+            let price_html = html!(format!(" {} ", formatted_price_value));
             let currency = price.currency.as_str();
             return match currency {
                 "ETH" => {
@@ -213,14 +219,6 @@ pub fn asset_land_function_component(props: &Props) -> Html {
                                  }
                             }).collect::<Html>()
                         }
-                        <tr>
-                            <th scope="row"><a href={format!("{}{}", IMMUTASCAN_TX, asset.mint_data.transaction_id)} class="text-decoration-none">{ asset.mint_data.transaction_id }</a></th>
-                            <td>{ "Mint" }</td>
-                            <td></td>
-                            <td ><a href={format!("{}{}", IMMUTASCAN_WALLET, asset.mint_data.wallet.clone())} class="text-decoration-none">{ format_wallet(&asset.mint_data.wallet) }</a></td>
-                            <td></td>
-                            <td>{ format_date(asset.mint_data.minted_on) }</td>
-                        </tr>
                       </tbody>
                     </table>
                 </div>

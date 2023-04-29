@@ -5,7 +5,7 @@ use crate::model::coingecko::coin::Coin;
 use crate::model::coingecko::coin_history::CoinHistory;
 use crate::utils::env_utils;
 use futures::StreamExt;
-use log::{error, info};
+use log::{error, info, warn};
 use sqlx::types::chrono::{NaiveDate, Utc};
 use sqlx::{Pool, Postgres};
 use std::thread;
@@ -72,7 +72,14 @@ async fn fetch_coins_history(pool: &Pool<Postgres>) {
         match api_utils::fetch_single_api_response::<CoinHistory>(url.as_str()).await {
             Ok(coin_history) => {
                 info!("Processing response from {url}");
-                coins_history_handler::create_one(&coin_history, date, pool).await;
+                if coin_history.market_data.is_some() {
+                    coins_history_handler::create_one(coin_history, date, pool).await;
+                } else {
+                    warn!(
+                        "No data for id {} and symbol {} and date {}",
+                        coin_history.id, coin_history.symbol, date
+                    );
+                }
             }
             Err(e) => {
                 error!("Couldn't read {url}! {e}");
@@ -80,9 +87,7 @@ async fn fetch_coins_history(pool: &Pool<Postgres>) {
         }
     }
 
-    match coins_history_handler::get_all_missing_distinct_date_to_id_pairs_for_filled_orders(&pool)
-        .await
-    {
+    match coins_history_handler::get_all_missing_distinct_date_to_id_pairs(&pool).await {
         Some(pairs) => {
             let values_to_process = pairs
                 .into_iter()

@@ -1,4 +1,5 @@
 use crate::api_reader::coingecko::coins_reader;
+use crate::api_reader::etherscan::transactions_reader;
 use crate::api_reader::immutablex::{
     assets_reader, collection_reader, mints_reader, orders_reader, transfers_reader,
 };
@@ -6,6 +7,7 @@ use crate::api_reader::immutablex::{
 #[tokio::main]
 pub async fn read() {
     read_immutablex().await;
+    read_etherscan().await;
     read_coingecko().await;
 }
 
@@ -19,4 +21,8 @@ async fn read_immutablex() {
 
 async fn read_coingecko() {
     coins_reader::read_coins().await;
+}
+
+async fn read_etherscan() {
+    transactions_reader::read_transactions().await;
 }
