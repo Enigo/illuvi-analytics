@@ -1,6 +1,7 @@
 use crate::db::db_handler;
 use log::error;
-use model::model::asset::{AssetData, LandAssetData, Price, TransactionData};
+use model::model::asset::{AssetData, LandAssetData, TransactionData};
+use model::model::price::Price;
 use sqlx::types::{chrono::NaiveDateTime, Decimal};
 use sqlx::{query_as, FromRow, PgPool};
 
@@ -231,14 +232,9 @@ impl From<OrderDataDb> for TransactionData {
             price: Some(Price {
                 currency: order_data.buy_currency,
                 price: if order_data.sell_price.is_some() {
-                    order_data
-                        .sell_price
-                        .unwrap()
-                        .to_string()
-                        .parse::<f32>()
-                        .unwrap()
+                    f64::try_from(order_data.sell_price.unwrap()).unwrap()
                 } else {
-                    order_data.buy_price.to_string().parse::<f32>().unwrap()
+                    f64::try_from(order_data.buy_price).unwrap()
                 },
             }),
         }
@@ -264,7 +260,7 @@ impl From<MintDataDb> for TransactionData {
             updated_on: mint_data_db.minted_on,
             price: Some(Price {
                 currency: mint_data_db.currency,
-                price: mint_data_db.price.to_string().parse::<f32>().unwrap(),
+                price: f64::try_from(mint_data_db.price).unwrap(),
             }),
         }
     }

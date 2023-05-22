@@ -1,12 +1,9 @@
-use crate::utils::api_utils;
-use chrono::NaiveDateTime;
+use crate::utils::{api_utils, formatting_utils};
 use log::error;
-use model::model::asset::{LandAssetData, Price};
+use model::model::asset::LandAssetData;
 use yew::prelude::*;
 
 const LAND_ICON: &str = "https://assets.illuvium-game.io/illuvidex/land/land-";
-const IMMUTASCAN_TX: &str = "https://immutascan.io/tx/";
-const IMMUTASCAN_WALLET: &str = "https://immutascan.io/address/";
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
@@ -67,7 +64,9 @@ pub fn asset_land_function_component(props: &Props) -> Html {
         }
         None => {
             html! {
-                <p class="text-white fs-4 mb-2">{"No data yet!"}</p>
+                <div class="container pt-5">
+                    <p class="text-white fs-4 mb-2">{"Loading..."}</p>
+                </div>
             }
         }
     };
@@ -89,11 +88,9 @@ pub fn asset_land_function_component(props: &Props) -> Html {
                   }
                   <p class="text-white fs-4 mb-2">
                       {"Current owner: "}
-                      <a href={format!("{}{}", IMMUTASCAN_WALLET, asset.asset_data.current_owner.clone())} class="text-decoration-none">
-                          { format_wallet(&asset.asset_data.current_owner) }
-                      </a>
+                      {formatting_utils::format_wallet_link(&asset.asset_data.current_owner)}
                   </p>
-                  <p class="text-white fs-4 mb-2">{format!("Last owner change: {}", format_date(asset.asset_data.last_owner_change))}</p>
+                  <p class="text-white fs-4 mb-2">{format!("Last owner change: {}", formatting_utils::format_date(asset.asset_data.last_owner_change))}</p>
                 </div>
               </div>
             </div>
@@ -151,34 +148,6 @@ pub fn asset_land_function_component(props: &Props) -> Html {
     }
 
     fn events(asset: &LandAssetData) -> Html {
-        fn format_price(price: &Price) -> Html {
-            let price_value = price.price;
-            let formatted_price_value = if price_value.fract() == 0.0 {
-                format!("{:.1}", price_value)
-            } else {
-                format!("{}", price_value)
-            };
-            let price_html = html!(format!(" {} ", formatted_price_value));
-            let currency = price.currency.as_str();
-            return match currency {
-                "ETH" => {
-                    html!(
-                    <>
-                        <i class="fab fa-ethereum"></i> {price_html}
-                    </>)
-                }
-                "USDC" => {
-                    html!(
-                    <>
-                        <i class="usdc_icon"></i> {price_html}
-                    </>)
-                }
-                _ => {
-                    html!(<p class="text-white">{price_html}{currency}</p>)
-                }
-            };
-        }
-
         html!(
             <div class="row my-3 p-3 bg-dark">
                 <div class="col-12">
@@ -204,17 +173,17 @@ pub fn asset_land_function_component(props: &Props) -> Html {
                                         if {transaction.id == Option::None} {
                                             <th scope="row" />
                                         } else {
-                                            <th scope="row"><a href={format!("{}{}", IMMUTASCAN_TX, transaction.id.unwrap())} class="text-decoration-none">{ transaction.id.unwrap() }</a></th>
+                                            <th scope="row">{formatting_utils::format_transaction_link(transaction.id.unwrap())}</th>
                                         }
                                         <td>{ transaction.event.clone() }</td>
-                                        <td><a href={format!("{}{}", IMMUTASCAN_WALLET, transaction.wallet_from.clone())} class="text-decoration-none">{ format_wallet(&transaction.wallet_from) }</a></td>
-                                        <td><a href={format!("{}{}", IMMUTASCAN_WALLET, transaction.wallet_to.clone())} class="text-decoration-none">{ format_wallet(&transaction.wallet_to) }</a></td>
+                                        <td>{formatting_utils::format_wallet_link(&transaction.wallet_from)}</td>
+                                        <td>{formatting_utils::format_wallet_link(&transaction.wallet_to)}</td>
                                         if let Some(price) = &transaction.price {
-                                            <td>{ format_price(&price) }</td>
+                                            <td>{ formatting_utils::format_price(&price) }</td>
                                         } else {
                                             <td></td>
                                         }
-                                        <td>{ format_date(transaction.updated_on) }</td>
+                                        <td>{ formatting_utils::format_date(transaction.updated_on) }</td>
                                     </tr>
                                  }
                             }).collect::<Html>()
@@ -224,16 +193,5 @@ pub fn asset_land_function_component(props: &Props) -> Html {
                 </div>
             </div>
         )
-    }
-
-    fn format_wallet(wallet: &String) -> String {
-        if wallet.is_empty() {
-            return "".to_string();
-        }
-        return format!("{}...{}", &wallet[0..6], &wallet[wallet.len() - 4..]);
-    }
-
-    fn format_date(date: NaiveDateTime) -> String {
-        date.format("%Y-%m-%d %H:%M:%S").to_string()
     }
 }

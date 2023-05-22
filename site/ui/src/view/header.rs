@@ -34,26 +34,42 @@ pub fn header() -> Html {
     }
 
     let collections = collections.iter().map(|collection| html! {
-            <li class="nav-item">
-                <Link<Route> to={Route::Collection {token_address: collection.address.clone()} } classes="nav-link">
+        <div class="col">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                            data-bs-target={format!("#{}", collection.name.clone())}
+                            aria-controls={ collection.name.clone() }
+                            aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id={ collection.name.clone() }>
+              <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id={format!("{}Link", collection.name.clone())}  role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     { collection.name.clone() }
-                </Link<Route>>
-            </li>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby={format!("{}Link", collection.name.clone())}>
+                    <Link<Route> to={Route::Collection {token_address: collection.address.clone()} } classes="dropdown-item">
+                        { "Overview" }
+                    </Link<Route>>
+                    <Link<Route> to={Route::CollectionStats {token_address: collection.address.clone()} } classes="dropdown-item">
+                        { "Statistics" }
+                    </Link<Route>>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+        </div>
         }).collect::<Html>();
 
     html! {
         <header class="bg-dark sticky-top">
             <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-                <div class="container">
+                <div class="container justify-content-start">
                     <Link<Route> to={ Route::Home } classes="navbar-brand">
                         { "IlluviAnalytics" }
                     </Link<Route>>
-                    <div class="container-fluid justify-content-start">
-                        <ul class="navbar-nav">
-                            {
-                                collections
-                            }
-                        </ul>
+                    <div class="row">
+                        { collections }
                     </div>
                 </div>
             </nav>

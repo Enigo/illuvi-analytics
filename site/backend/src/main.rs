@@ -1,6 +1,8 @@
-use crate::controller::assets_controller::get_asset;
-use crate::controller::collection_controller::get_collections;
-use crate::controller::mints_controller::get_mints;
+use crate::controller::{
+    assets_controller::get_asset, collection_controller::get_collection,
+    collection_controller::get_collections, mints_controller::get_mints,
+    stats_controller::get_stats, vitals_controller::get_vitals,
+};
 use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 use dotenvy::dotenv;
@@ -21,6 +23,9 @@ async fn main() -> std::io::Result<()> {
             .service(get_mints)
             .service(get_asset)
             .service(get_collections)
+            .service(get_collection)
+            .service(get_stats)
+            .service(get_vitals)
             // cors need to be configured correctly
             .wrap(Cors::permissive())
     })

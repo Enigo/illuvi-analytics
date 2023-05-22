@@ -1,3 +1,4 @@
+use crate::model::price::Price;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
@@ -17,12 +18,6 @@ pub struct TransactionData {
     pub event: String,
     pub updated_on: NaiveDateTime,
     pub price: Option<Price>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct Price {
-    pub price: f32,
-    pub currency: String,
 }
 
 #[derive(Serialize, Deserialize)]
