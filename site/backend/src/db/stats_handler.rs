@@ -101,13 +101,13 @@ async fn fetch_trades_volume(
 ) -> Vec<StatsDataTradesVolume> {
     return match query_as::<_, StatsDataTradesVolumeDb>(
         "select count(*) as total_trades,
-         round(SUM(od.sell_price), 6) as total_in_buy_currency,
+         round(SUM(od.buy_price), 6) as total_in_buy_currency,
          od.buy_currency,
-         round(SUM(od.sell_price * ch.btc), 6) as total_btc,
-         round(SUM(od.sell_price * ch.eth), 6) as total_eth,
-         round(SUM(od.sell_price * ch.usd), 6) as total_usd,
-         round(SUM(od.sell_price * ch.eur), 6) as total_eur,
-         round(SUM(od.sell_price * ch.jpy), 6) as total_jpy
+         round(SUM(od.buy_price * ch.btc), 6) as total_btc,
+         round(SUM(od.buy_price * ch.eth), 6) as total_eth,
+         round(SUM(od.buy_price * ch.usd), 6) as total_usd,
+         round(SUM(od.buy_price * ch.eur), 6) as total_eur,
+         round(SUM(od.buy_price * ch.jpy), 6) as total_jpy
           from order_data od join coin_history ch on od.buy_currency = ch.symbol AND ch.datestamp = od.updated_on::DATE
                              where od.status='filled' and od.token_address=$1
                              group by od.buy_currency
@@ -204,11 +204,11 @@ async fn fetch_cheapest_and_most_expensive_trades_by_tier(
     pool: &Pool<Postgres>,
 ) -> BTreeMap<i32, Vec<SingleTrade>> {
     return match query_as::<_, SingleTradeDb>(
-        "SELECT tier, token_id, name, sum_usd,  buy_currency, sell_price, wallet_to, wallet_from, updated_on, transaction_id
+        "SELECT tier, token_id, name, sum_usd,  buy_currency, buy_price, wallet_to, wallet_from, updated_on, transaction_id
             FROM (
-                     SELECT a.token_id, a.tier, a.name, round((od.sell_price * ch.usd), 2) AS sum_usd, od.buy_currency, od.sell_price, od.wallet_to, od.wallet_from, od.updated_on, od.transaction_id,
-                            ROW_NUMBER() OVER (PARTITION BY a.tier ORDER BY (od.sell_price * ch.usd) DESC) AS highest_rn,
-                            ROW_NUMBER() OVER (PARTITION BY a.tier ORDER BY (od.sell_price * ch.usd)) AS lowest_rn
+                     SELECT a.token_id, a.tier, a.name, round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency, od.buy_price, od.wallet_to, od.wallet_from, od.updated_on, od.transaction_id,
+                            ROW_NUMBER() OVER (PARTITION BY a.tier ORDER BY (od.buy_price * ch.usd) DESC) AS highest_rn,
+                            ROW_NUMBER() OVER (PARTITION BY a.tier ORDER BY (od.buy_price * ch.usd)) AS lowest_rn
                      FROM asset a
                               JOIN order_data od ON a.token_id = od.token_id
                               JOIN coin_history ch ON ch.datestamp = od.updated_on::date AND od.buy_currency = ch.symbol

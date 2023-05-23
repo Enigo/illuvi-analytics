@@ -13,12 +13,13 @@ impl Persistable<Order> for OrderSaver {
     async fn create_one(&self, order: &Order, pool: &Pool<Postgres>) {
         let order_result = &order.result;
         let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
-            "insert into order_data (order_id, status, wallet_from, token_id, token_address, buy_currency, buy_price, created_on, updated_on) ",
+            "insert into order_data (order_id, status, wallet_from, token_id, token_address, buy_currency, sell_price, buy_price, created_on, updated_on) ",
         );
 
         query_builder.push_values(order_result, |mut builder, res| {
             let sell_data = &res.sell.data;
-            let buy_data = &res.buy.data;
+            let maker_fees = &res.maker_fees;
+            let taker_fees = &res.taker_fees;
             let token_id = sell_data.token_id.clone().unwrap().parse::<i32>().unwrap();
             builder
                 .push_bind(res.order_id)
@@ -26,11 +27,9 @@ impl Persistable<Order> for OrderSaver {
                 .push_bind(res.wallet.clone())
                 .push_bind(token_id)
                 .push_bind(&sell_data.token_address)
-                .push_bind(&res.buy.buy_currency)
-                .push_bind(price_utils::get_price(
-                    &buy_data.quantity,
-                    buy_data.decimals.unwrap(),
-                ))
+                .push_bind(&taker_fees.symbol)
+                .push_bind(price_utils::get_price(&maker_fees.quantity_with_fees, maker_fees.decimals))
+                .push_bind(price_utils::get_price(&taker_fees.quantity_with_fees, taker_fees.decimals))
                 .push_bind(DateTime::parse_from_rfc3339(&res.timestamp).unwrap())
                 .push_bind(DateTime::parse_from_rfc3339(&res.updated_timestamp).unwrap());
         });
@@ -60,48 +59,11 @@ impl Persistable<Order> for OrderSaver {
     }
 }
 
-pub async fn fetch_all_order_ids_for_buy_currency(
-    buy_currency: &str,
-    pool: &Pool<Postgres>,
-) -> Option<Vec<i32>> {
-    return match query_scalar("select order_id from order_data where buy_currency = $1")
-        .bind(buy_currency)
-        .fetch_all(pool)
-        .await
-    {
-        Ok(order_ids) => Some(order_ids),
-        Err(e) => {
-            error!("Couldn't fetch ids for currency {buy_currency}! {e}");
-            None
-        }
-    };
-}
-
-pub async fn update_buy_currency_for_order_id(
-    order_id: i32,
-    buy_currency: &str,
-    pool: &Pool<Postgres>,
-) {
-    match query("update order_data set buy_currency = $1 where order_id = $2")
-        .bind(buy_currency)
-        .bind(order_id)
-        .execute(pool)
-        .await
-    {
-        Ok(_) => {
-            info!("Updated order_id {order_id}")
-        }
-        Err(e) => {
-            error!("Error updating order_id {order_id}: {e}");
-        }
-    }
-}
-
-pub async fn fetch_all_filled_token_ids_with_no_wallet_to_or_no_sell_price_or_transaction_id(
+pub async fn fetch_all_filled_token_ids_with_no_wallet_to_or_transaction_id(
     pool: &Pool<Postgres>,
 ) -> Option<Vec<i32>> {
     return match query_scalar(
-        "select distinct(token_id) from order_data where status = 'filled' and (wallet_to is null or sell_price is null or transaction_id is null)"
+        "select distinct(token_id) from order_data where status = 'filled' and (wallet_to is null or transaction_id is null)"
     )
         .fetch_all(pool)
         .await {
@@ -115,12 +77,12 @@ pub async fn fetch_all_filled_token_ids_with_no_wallet_to_or_no_sell_price_or_tr
     };
 }
 
-pub async fn fetch_all_filled_order_ids_with_no_wallet_to_or_no_sell_price_or_transaction_id_for_token_id(
+pub async fn fetch_all_filled_order_ids_with_no_wallet_to_or_transaction_id_for_token_id(
     token_id: i32,
     pool: &Pool<Postgres>,
 ) -> Option<Vec<i32>> {
     return match query_scalar(
-        "select order_id from order_data where status = 'filled' and (wallet_to is null or sell_price is null or transaction_id is null) and token_id = $1"
+        "select order_id from order_data where status = 'filled' and (wallet_to is null or transaction_id is null) and token_id = $1"
     )
         .bind(token_id)
         .fetch_all(pool)
@@ -135,16 +97,14 @@ pub async fn fetch_all_filled_order_ids_with_no_wallet_to_or_no_sell_price_or_tr
     };
 }
 
-pub async fn update_wallet_to_and_sell_price_and_transaction_id_for_order_id(
+pub async fn update_wallet_to_and_transaction_id_for_order_id(
     order_id: i32,
     wallet_to: String,
-    sell_price: f32,
     transaction_id: i32,
     pool: &Pool<Postgres>,
 ) {
-    match query("update order_data set wallet_to = $1, sell_price = $2, transaction_id = $3 where order_id = $4")
+    match query("update order_data set wallet_to = $1, transaction_id = $2 where order_id = $3")
         .bind(wallet_to)
-        .bind(sell_price)
         .bind(transaction_id)
         .bind(order_id)
         .execute(pool)

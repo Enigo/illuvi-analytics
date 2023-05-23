@@ -125,7 +125,7 @@ async fn get_all_order_data_for_token_address_and_token_id(
     token_id: &i32,
 ) -> Option<Vec<TransactionData>> {
     let result: Option<Vec<OrderDataDb>> = match query_as(
-        "select transaction_id, status, wallet_from, wallet_to, updated_on, buy_currency, buy_price, sell_price from order_data where token_address=$1 and token_id=$2")
+        "select transaction_id, status, wallet_from, wallet_to, updated_on, buy_currency, buy_price from order_data where token_address=$1 and token_id=$2")
         .bind(token_address)
         .bind(token_id)
         .fetch_all(pool)
@@ -218,7 +218,6 @@ struct OrderDataDb {
     updated_on: NaiveDateTime,
     buy_currency: String,
     buy_price: Decimal,
-    sell_price: Option<Decimal>,
 }
 
 impl From<OrderDataDb> for TransactionData {
@@ -231,11 +230,7 @@ impl From<OrderDataDb> for TransactionData {
             updated_on: order_data.updated_on,
             price: Some(Price {
                 currency: order_data.buy_currency,
-                price: if order_data.sell_price.is_some() {
-                    f64::try_from(order_data.sell_price.unwrap()).unwrap()
-                } else {
-                    f64::try_from(order_data.buy_price).unwrap()
-                },
+                price: f64::try_from(order_data.buy_price).unwrap(),
             }),
         }
     }

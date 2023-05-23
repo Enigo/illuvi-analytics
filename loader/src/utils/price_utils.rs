@@ -1,13 +1,7 @@
-pub fn get_price(quantity: &String, decimals: i32) -> f32 {
-    let index_of_comma = quantity.chars().count() as i32 - decimals;
+use rust_decimal::prelude::*;
 
-    return match index_of_comma {
-        -1 => (format!("{}{}", "0.0", quantity)).parse().unwrap(),
-        0 => (format!("{}{}", "0.", quantity)).parse().unwrap(),
-        _ => {
-            let mut quantity_clone = quantity.clone();
-            quantity_clone.insert(index_of_comma as usize, '.');
-            quantity_clone.parse().unwrap()
-        }
-    };
+pub fn get_price(quantity: &String, decimals: i32) -> f32 {
+    let wei_value = Decimal::from_str(quantity).unwrap();
+    let ether_value = wei_value / Decimal::new(10i64.pow(decimals as u32), 0);
+    ether_value.to_f32().unwrap()
 }

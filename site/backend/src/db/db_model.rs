@@ -10,7 +10,7 @@ pub struct SingleTradeDb {
     pub name: String,
     pub sum_usd: Decimal,
     pub buy_currency: String,
-    pub sell_price: Decimal,
+    pub buy_price: Decimal,
     pub wallet_to: String,
     pub wallet_from: String,
     pub updated_on: NaiveDateTime,
@@ -26,8 +26,8 @@ impl From<SingleTradeDb> for SingleTrade {
                 price: trade.sum_usd.to_string().parse::<f64>().unwrap(),
                 currency: String::from("USD"),
             },
-            sell_price: Price {
-                price: trade.sell_price.to_string().parse::<f64>().unwrap(),
+            buy_price: Price {
+                price: trade.buy_price.to_string().parse::<f64>().unwrap(),
                 currency: trade.buy_currency.clone(),
             },
             wallet_to: trade.wallet_to.clone(),

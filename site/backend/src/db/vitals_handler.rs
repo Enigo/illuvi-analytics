@@ -51,8 +51,8 @@ pub async fn get_all_vitals_for_token_address(token_address: &String) -> Option<
     let trades_volume = match query_as::<_, PriceDb>(
         "select round(sum(total_eth), 2) as sum_eth, round(sum(total_usd), 2) as sum_usd
                     from (
-                             select sum(od.sell_price * ch.eth) as total_eth,
-                                    sum(od.sell_price * ch.usd) as total_usd
+                             select sum(od.buy_price * ch.eth) as total_eth,
+                                    sum(od.buy_price * ch.usd) as total_usd
                              from order_data od
                                       join coin_history ch on od.buy_currency = ch.symbol
                                  and ch.datestamp = od.updated_on::date
@@ -83,8 +83,8 @@ pub async fn get_all_vitals_for_token_address(token_address: &String) -> Option<
     };
 
     let last_trades = match query_as::<_, SingleTradeDb>(
-        "SELECT a.token_id, a.tier, a.name, round((od.sell_price * ch.usd), 2) AS sum_usd, od.buy_currency,
-                od.sell_price, od.wallet_to, od.wallet_from, od.updated_on, od.transaction_id
+        "SELECT a.token_id, a.tier, a.name, round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency,
+                od.buy_price, od.wallet_to, od.wallet_from, od.updated_on, od.transaction_id
                 FROM asset a
                          JOIN order_data od ON a.token_id = od.token_id
                          JOIN coin_history ch ON ch.datestamp = od.updated_on::date AND od.buy_currency = ch.symbol
