@@ -1,3 +1,4 @@
+pub mod about;
 pub mod asset;
 pub mod collection;
 pub mod footer;

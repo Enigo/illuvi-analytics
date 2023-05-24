@@ -1,5 +1,5 @@
 use crate::utils::{api_utils, formatting_utils};
-use crate::view::collection::common::trade_card::TradeCardWithFlip;
+use crate::view::collection::common::{no_data::NoData, trade_card::TradeCardWithFlip};
 use crate::view::collection::stats::trade_volume_card::TradeVolumeCardWithFlip;
 use log::error;
 use model::model::stats::{
@@ -51,11 +51,7 @@ pub fn stats_view_function_component(props: &Props) -> Html {
 
 fn stats_view(stats_data: &StatsData, token_address: &String) -> Html {
     if stats_data.total.assets == 0 {
-        return html!(
-            <div class="container p-5 pt-1 bg-dark">
-                <p class="text-white fs-2 mb-2">{"No data yet!"}</p>
-            </div>
-        );
+        return html!( <NoData /> );
     }
 
     html! {
@@ -68,27 +64,31 @@ fn stats_view(stats_data: &StatsData, token_address: &String) -> Html {
 
 fn totals(stats_data: &StatsData, token_address: &String) -> Html {
     html!(
-        <div class="container mt-1 p-5 pt-1 bg-dark">
-            { render_totals(&stats_data.total) }
-            { render_most(stats_data, token_address) }
+        <div class="container-fluid p-5 bg-gray">
+            <div class="container">
+                { render_totals(&stats_data.total) }
+                { render_most(stats_data, token_address) }
+            </div>
         </div>
     )
 }
 
 fn statistics(stats_data: &StatsData, token_address: &String) -> Html {
     return html!(
-        <div class="container mt-1 p-5 pt-1 bg-dark">
-            { render_trades_volume(stats_data) }
-            { render_trades_amount_html(stats_data) }
-            { render_cheapest_and_most_expensive_trades(stats_data, token_address) }
+        <div class="container-fluid p-5 pt-1 bg-dark">
+            <div class="container mt-4">
+                { render_trades_volume(stats_data) }
+                { render_trades_amount_html(stats_data) }
+                { render_cheapest_and_most_expensive_trades(stats_data, token_address) }
+            </div>
         </div>
     );
 }
 
 fn render_totals(total: &StatsDataTotal) -> Html {
     return html! {
-        <div class="row my-3 p-3 text-center justify-content-center">
-            <p class="text-white fs-3 mb-2">{"Totals"}</p>
+        <div class="row p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast">
+            <p class="text-white fs-2 mb-2">{"Totals"}</p>
             { formatting_utils::get_single_card(&String::from("Assets"), &String::from("minted"), &total.assets) }
             { formatting_utils::get_single_card(&String::from("Transfers"), &String::from("made"), &total.transfers) }
             { formatting_utils::get_single_card(&String::from("Trades"), &String::from("active | cancelled | filled"), &total.trades) }
@@ -98,7 +98,7 @@ fn render_totals(total: &StatsDataTotal) -> Html {
 
 fn render_most(stats_data: &StatsData, token_address: &String) -> Html {
     return html! {
-        <div class="row my-3 p-3 text-center justify-content-center">
+        <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast">
             if !&stats_data.most_transferred_token.is_empty() {
                 { html!(get_single_most_token_card(String::from("Most Transferred Token"), token_address, &stats_data.most_transferred_token)) }
             }
@@ -115,9 +115,9 @@ fn render_most(stats_data: &StatsData, token_address: &String) -> Html {
 fn render_trades_volume(stats_data: &StatsData) -> Html {
     let trades_volume = &stats_data.trades_volume;
     return html!(
-        <div class="row text-center">
-            <p class="text-white fs-3 mb-0">{"Trades"}</p>
-            <p class="text-white fs-4 mb-2">{"Volume"}</p>
+        <div class="row text-center animate__animated animate__fadeIn animate__fast">
+            <p class="text-white fs-2 mb-0">{"Trades"}</p>
+            <p class="text-white fs-3 mb-2">{"Volume"}</p>
             <p class="text-white fs-5 mb-0">{"There are various cryptocurrencies that can be used to purchase the assets"}</p>
             <p class="text-white fs-5 mb-0">{"This section lists all of them conveniently converted into multiple other currencies"}</p>
             <small class="text-white mb-1">{"The data below shows trades data excluding today"}</small>
@@ -136,8 +136,8 @@ fn render_trades_volume(stats_data: &StatsData) -> Html {
 fn render_trades_amount_html(stats_data: &StatsData) -> Html {
     let trades_by_status = &stats_data.trades_by_status;
     return html!(
-        <div class="row text-center mb-5">
-            <p class="text-white text-center fs-4 mb-2">{"Amount"}</p>
+        <div class="row text-center mb-5 animate__animated animate__fadeIn animate__fast">
+            <p class="text-white text-center fs-3 mb-2">{"Amount"}</p>
             { trades_by_status.iter().map(|(status, trades)| {
                 let mut total_per_status = 0;
                 html!(
@@ -167,12 +167,12 @@ fn render_cheapest_and_most_expensive_trades(
 ) -> Html {
     let trades_by_tier = &stats_data.cheapest_and_most_expensive_trades_by_tier;
     return html! {
-        <div class="row my-3 p-3 text-center justify-content-center">
-            <p class="text-white fs-4 mb-2">{"Cheapest | Most Expensive"}</p>
+        <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast">
+            <p class="text-white fs-3 mb-2">{"Cheapest | Most Expensive"}</p>
             { trades_by_tier.iter().map(|(tier, trades)| {
                 html! {
                      <div class="row text-center mb-5">
-                        <p class="text-white fs-5 mb-2">{format!("Tier {}", tier)}</p>
+                        <p class="text-white fs-4 mb-2">{format!("Tier {}", tier)}</p>
                         { trades.iter().map(|trade| {
                             let trade = trade.clone();
                             let token_address = token_address.clone();

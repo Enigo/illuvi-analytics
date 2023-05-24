@@ -1,5 +1,5 @@
 use crate::utils::{api_utils, formatting_utils};
-use crate::view::collection::common::trade_card::TradeCardWithFlip;
+use crate::view::collection::common::{no_data::NoData, trade_card::TradeCardWithFlip};
 use log::error;
 use model::model::price::Price;
 use model::model::vitals::{VitalsData, VitalsDataFloor};
@@ -57,11 +57,7 @@ pub fn collection_mint_function_component(props: &Props) -> Html {
 
 fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
     if vitals_data.floor.is_empty() {
-        return html!(
-            <div class="container p-5 pt-1 bg-dark">
-                <p class="text-white fs-2 mb-2">{"No data yet!"}</p>
-            </div>
-        );
+        return html!( <NoData /> );
     }
 
     fn get_single_floor_card(data_floor: &VitalsDataFloor, token_address: &String) -> Html {
@@ -90,7 +86,7 @@ fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
 
     let floor_data_html = grouped_data.iter().map(|(tier, data_floors)|
         html!(
-            <div class="row my-3 p-3 text-center justify-content-center">
+            <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast animate__delay-0.25s">
                 <p class="text-white fs-3">{format!("Tier {} floors", tier)}</p>
                 { data_floors.iter().map(|data_floor|get_single_floor_card(data_floor, token_address)).collect::<Html>()}
             </div>
@@ -99,7 +95,7 @@ fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
 
     let last_trades = &vitals_data.last_trades;
     let last_trades_html = html! {
-        <div class="row my-3 p-3 text-center justify-content-center">
+        <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast animate__delay-0.25s">
             <p class="text-white fs-3 mb-2">{format!("Last {} trades", last_trades.len())}</p>
              <div class="row text-center mb-5">
                 { last_trades.iter().map(|trade| {
@@ -113,14 +109,16 @@ fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
 
     let trades_volume = vitals_data.trades_volume.clone();
     return html! {
-        <div class="container p-5 pt-1 bg-dark">
-            <div class="row my-3 p-3 text-center justify-content-center">
-                { formatting_utils::get_single_card(&String::from("Assets"), &String::from("minted"), &vitals_data.total_assets) }
-                { formatting_utils::get_single_card(&String::from("Unique holders"), &String::from("wallets"), &vitals_data.unique_holders) }
-                { html! { <CardWithOnClick {trades_volume} /> } }
+        <div class="container-fluid p-5 bg-gray">
+            <div class="container">
+                <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast animate__delay-0.25s">
+                    { formatting_utils::get_single_card(&String::from("Assets"), &String::from("minted"), &vitals_data.total_assets) }
+                    { formatting_utils::get_single_card(&String::from("Unique holders"), &String::from("wallets"), &vitals_data.unique_holders) }
+                    { html! { <CardWithOnClick {trades_volume} /> } }
+                </div>
+                { floor_data_html }
+                { last_trades_html }
             </div>
-            { floor_data_html }
-            { last_trades_html }
         </div>
     };
 }

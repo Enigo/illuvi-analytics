@@ -49,14 +49,16 @@ pub fn collection_project_function_component(props: &Props) -> Html {
 
 fn project(collection: &CollectionData) -> Html {
     html! {
-        <div class="container mt-1 p-3 bg-dark">
-            <div class="row mt-4">
-                <div class="col-lg-4 text-center">
-                  <img src={collection.collection_image_url.clone()} class="img-fluid" width="250" height="250" alt={collection.name.clone()}/>
-                </div>
-                <div class="col-lg-7">
-                  <h2 class="text-white fs-1">{&collection.name}</h2>
-                  <p class="text-light">{&collection.description}</p>
+        <div class="container-fluid p-3 bg-dark">
+            <div class="container">
+                <div class="row my-4">
+                    <div class="col-lg-4 text-center">
+                      <img src={collection.collection_image_url.clone()} class="img-fluid shadow-gradient" width="250" height="250" alt={collection.name.clone()}/>
+                    </div>
+                    <div class="col-lg-7 animate__animated animate__fadeIn animate__fast animate__delay-0.5s">
+                      <h2 class="text-white fs-1">{&collection.name}</h2>
+                      <p class="text-light">{&collection.description}</p>
+                    </div>
                 </div>
             </div>
         </div>

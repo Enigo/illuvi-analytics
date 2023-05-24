@@ -82,10 +82,12 @@ pub fn mints(mint: &MintData, page: UseStateHandle<i32>) -> Html {
     return html! {
     if !mint.mints.is_empty() {
             <selection>
-                <div class="container mt-1 p-3 bg-dark">
-                    <p class="text-white text-center fs-2 mb-4">{"Explore"}</p>
-                    {mints}
-                    {pagination(mint, page)}
+                <div class="container-fluid p-3 bg-dark">
+                    <div class="container mt-4 animate__animated animate__fadeIn animate__fast animate__delay-1s">
+                        <p class="text-white text-center fs-2 mb-4">{"Explore"}</p>
+                        {mints}
+                        {pagination(mint, page)}
+                    </div>
                 </div>
             </selection>
         }

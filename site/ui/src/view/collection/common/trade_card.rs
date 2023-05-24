@@ -32,11 +32,11 @@ pub fn get_single_trade_volume_card(props: &CardProps) -> Html {
                   <h5 class="card-header bg-light">{trade.name.clone()}</h5>
                   <div class="card-body bg-pink h-100 d-flex flex-column justify-content-center align-items-center py-3 px-0">
                     <ul class="list-group list-group-flush">
-                      <li class="list-group-item bg-pink text-white fs-5">{formatting_utils::format_price(&trade.buy_price)}</li>
-                      <li class="list-group-item bg-pink text-white fs-5">
+                      <li class="list-group-item bg-pink text-white fs-5 py-3 px-0">{formatting_utils::format_price(&trade.buy_price)}</li>
+                      <li class="list-group-item bg-pink text-white fs-5 py-3 px-0">
                         {"From "}{formatting_utils::format_wallet_link(&trade.wallet_from)}{" to "}{formatting_utils::format_wallet_link(&trade.wallet_to)}
                       </li>
-                      <li class="list-group-item bg-pink text-white fs-5">{formatting_utils::format_date(trade.updated_on)}</li>
+                      <li class="list-group-item bg-pink text-white fs-5 py-3 px-0">{formatting_utils::format_date(trade.updated_on)}</li>
                     </ul>
                     <p class="card-text"><small class="text-white">{formatting_utils::format_transaction_link(trade.transaction_id)}</small></p>
                   </div>

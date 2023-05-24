@@ -1,5 +1,6 @@
 body {
-    background: #1f1b41;
+    background: #212529;
+    font-family: "Poppins", sans-serif;
 }
 
 .usdc_icon {
@@ -17,6 +18,14 @@ body {
 
 .bg-pink {
     background-color: #800080;
+}
+
+.bg-gray {
+    background-color: #363636;
+}
+
+.shadow-gradient {
+    filter: drop-shadow(0px 1px #7d9be8) drop-shadow(0px -4px 16px rgb(171 84 244 / 72%)) drop-shadow(0px 2px 1px rgb(0 0 0 / 44%))
 }
 
 /*Flipping card*/
