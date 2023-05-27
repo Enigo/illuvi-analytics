@@ -3,7 +3,9 @@ use crate::controller::{
     collection_controller::get_collections, mints_controller::get_mints,
     stats_controller::get_stats, vitals_controller::get_vitals,
 };
+use crate::db::db_handler;
 use actix_cors::Cors;
+use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use dotenvy::dotenv;
 
@@ -18,16 +20,22 @@ async fn main() -> std::io::Result<()> {
     );
     dotenv().expect(".env file should be present");
 
-    HttpServer::new(|| {
+    let pool = db_handler::create_pool().await;
+
+    HttpServer::new(move || {
         App::new()
+            .app_data(Data::new(pool.clone()))
             .service(get_mints)
             .service(get_asset)
             .service(get_collections)
             .service(get_collection)
             .service(get_stats)
             .service(get_vitals)
-            // cors need to be configured correctly
-            .wrap(Cors::permissive())
+            .wrap(
+                Cors::default()
+                    .allowed_origin("http://localhost:8080")
+                    .allowed_methods(vec!["GET"]),
+            )
     })
     .bind(("127.0.0.1", 8081))?
     .run()

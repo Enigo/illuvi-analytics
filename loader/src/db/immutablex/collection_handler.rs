@@ -1,12 +1,9 @@
-use crate::db::db_handler;
 use crate::model::immutablex::collection::Collection;
 use log::{error, info};
 use sqlx::types::chrono::DateTime;
-use sqlx::{Postgres, QueryBuilder};
+use sqlx::{Pool, Postgres, QueryBuilder};
 
-pub async fn create_one(collection: &Collection) {
-    let pool = db_handler::open_connection().await;
-
+pub async fn create_one(collection: &Collection, pool: &Pool<Postgres>) {
     let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
         "insert into collection (address, name, description, icon_url, collection_image_url,\
                                      project_id, project_owner_address, metadata_api_url, created_on, updated_on) ",
@@ -30,7 +27,7 @@ pub async fn create_one(collection: &Collection) {
     let query = query_builder
         .push(" ON CONFLICT (address) DO UPDATE SET updated_on = EXCLUDED.updated_on;")
         .build();
-    match query.execute(&pool).await {
+    match query.execute(pool).await {
         Ok(result) => {
             info!("Inserted {} rows", result.rows_affected())
         }
@@ -38,6 +35,4 @@ pub async fn create_one(collection: &Collection) {
             error!("Couldn't insert values due to {e}")
         }
     }
-
-    db_handler::close_connection(pool).await;
 }

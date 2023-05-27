@@ -1,6 +1,5 @@
 use crate::api_reader::api_utils;
 use crate::db::coingecko::{coins_handler, coins_history_handler};
-use crate::db::db_handler;
 use crate::model::coingecko::coin::Coin;
 use crate::model::coingecko::coin_history::CoinHistory;
 use crate::utils::env_utils;
@@ -15,14 +14,10 @@ const LIST_ENDPOINT: &str = "https://api.coingecko.com/api/v3/coins/list";
 const HISTORY_ENDPOINT: &str =
     "https://api.coingecko.com/api/v3/coins/{}/history?localization=false&date={}";
 
-pub async fn read_coins() {
+pub async fn read_coins(pool: &Pool<Postgres>) {
     if env_utils::as_parsed::<bool>("COINS_ENABLED") {
-        let pool = db_handler::open_connection().await;
-
         fetch_coins(&pool).await;
         fetch_coins_history(&pool).await;
-
-        db_handler::close_connection(pool).await;
     }
 }
 

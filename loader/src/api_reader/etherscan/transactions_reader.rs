@@ -1,5 +1,4 @@
 use crate::api_reader::api_utils;
-use crate::db::db_handler;
 use crate::db::immutablex::mints_handler;
 use crate::model::etherscan::{token, transaction};
 use crate::utils::env_utils;
@@ -16,11 +15,10 @@ const LAND_CONTRACT: &str = "0x7a47f7707c4b2f2b1def04a47cd8681d48eadeb8";
 const LAND_CONTRACT_CREATION_BLOCK: &str = "14846665";
 const LAND_FUNCTION_NAME: &str = "buyL2";
 
-pub async fn read_transactions() {
+pub async fn read_transactions(pool: &Pool<Postgres>) {
     if !env_utils::as_parsed::<bool>("ETHERSCAN_ENABLED") {
         return;
     }
-    let pool = db_handler::open_connection().await;
     let api_key = env_utils::as_string("ETHERSCAN_API_KEY");
     match mints_handler::fetch_all_lands_with_no_price_or_currency(&pool).await {
         Some(wallets) => {
@@ -34,8 +32,6 @@ pub async fn read_transactions() {
         }
         _ => {}
     }
-
-    db_handler::close_connection(pool).await;
 }
 
 async fn process_wallet(wallet: String, api_key: &String, pool: &Pool<Postgres>) {

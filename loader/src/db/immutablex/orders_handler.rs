@@ -28,8 +28,14 @@ impl Persistable<Order> for OrderSaver {
                 .push_bind(token_id)
                 .push_bind(&sell_data.token_address)
                 .push_bind(&taker_fees.symbol)
-                .push_bind(price_utils::get_price(&maker_fees.quantity_with_fees, maker_fees.decimals))
-                .push_bind(price_utils::get_price(&taker_fees.quantity_with_fees, taker_fees.decimals))
+                .push_bind(price_utils::get_price(
+                    &maker_fees.quantity_with_fees,
+                    maker_fees.decimals,
+                ))
+                .push_bind(price_utils::get_price(
+                    &taker_fees.quantity_with_fees,
+                    taker_fees.decimals,
+                ))
                 .push_bind(DateTime::parse_from_rfc3339(&res.timestamp).unwrap())
                 .push_bind(DateTime::parse_from_rfc3339(&res.updated_timestamp).unwrap());
         });

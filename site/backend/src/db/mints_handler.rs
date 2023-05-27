@@ -1,17 +1,15 @@
-use crate::db::db_handler;
 use log::error;
 use model::model::mint::{Mint, MintData};
-use sqlx::{query, query_as, FromRow, Row};
+use sqlx::{query, query_as, FromRow, Pool, Postgres, Row};
 
 pub async fn get_all_mints_for_token_address(
+    pool: &Pool<Postgres>,
     token_address: &String,
     page: i16,
 ) -> Option<MintData> {
-    let pool = db_handler::open_connection().await;
-
     let total: i64 = match query("select count(token_id) from mint where token_address=$1")
         .bind(token_address)
-        .fetch_one(&pool)
+        .fetch_one(pool)
         .await
     {
         Ok(result) => result.get(0),
@@ -30,7 +28,7 @@ pub async fn get_all_mints_for_token_address(
     )
     .bind(token_address)
     .bind((page - 1) * 50)
-    .fetch_all(&pool)
+    .fetch_all(pool)
     .await
     {
         Ok(res) => {
@@ -42,8 +40,6 @@ pub async fn get_all_mints_for_token_address(
             None
         }
     };
-
-    db_handler::close_connection(pool).await;
 
     return result;
 }

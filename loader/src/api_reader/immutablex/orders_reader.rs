@@ -14,9 +14,10 @@ const ORDERS_URL: &str = "https://api.x.immutable.com/v3/orders?sell_token_addre
 const ORDER_URL: &str = "https://api.x.immutable.com/v3/orders";
 const TRADES_URL: &str = "https://api.x.immutable.com/v3/trades?party_b_token_address=0x9e0d99b864e1ac12565125c5a82b59adea5a09cd&page_size=200&party_b_token_id=";
 
-pub async fn read_orders() {
+pub async fn read_orders(pool: &Pool<Postgres>) {
     if env_utils::as_parsed::<bool>("ORDERS_ENABLED") {
         utils::fetch_and_persist_all_api_responses_with_cursor_and_last_timestamp::<Order>(
+            pool,
             ORDERS_URL,
             "updated_min_timestamp",
             &OrderSaver,

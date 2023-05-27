@@ -1,57 +1,39 @@
-use crate::db::db_handler;
 use log::error;
 use model::model::collection::CollectionData;
 use sqlx::types::chrono::NaiveDateTime;
-use sqlx::{query_as, FromRow};
+use sqlx::{query_as, FromRow, Pool, Postgres};
 
-pub async fn get_all_collections() -> Option<Vec<CollectionData>> {
-    let pool = db_handler::open_connection().await;
-
-    let query_result: Option<Vec<CollectionDataDb>> = match query_as(
+pub async fn get_all_collections(pool: &Pool<Postgres>) -> Option<Vec<CollectionData>> {
+    return match query_as::<_, CollectionDataDb>(
         "select address, name, collection_image_url, description, created_on from collection order by created_on",
     )
-        .fetch_all(&pool)
+        .fetch_all(pool)
         .await
     {
-        Ok(result) => Some(result),
+        Ok(result) => Some(result.into_iter().map(|t| t.into()).collect()),
         Err(e) => {
             error!("Error fetching data: {e}");
             None
         }
     };
-
-    let result = match query_result {
-        Some(res) => Some(res.into_iter().map(|t| t.into()).collect()),
-        None => None,
-    };
-
-    db_handler::close_connection(pool).await;
-
-    return result;
 }
 
-pub async fn get_collection_for_address(address: &String) -> Option<CollectionData> {
-    let pool = db_handler::open_connection().await;
-
-    let result: Option<CollectionDataDb> = match query_as(
+pub async fn get_collection_for_address(
+    pool: &Pool<Postgres>,
+    address: &String,
+) -> Option<CollectionData> {
+    return match query_as::<_, CollectionDataDb>(
         "select address, name, collection_image_url, description, created_on from collection where address=$1",
     )
         .bind(address)
-        .fetch_one(&pool)
+        .fetch_one(pool)
         .await
     {
-        Ok(result) => Some(result),
+        Ok(result) => Some(result.into()),
         Err(e) => {
             error!("Error fetching data: {e}");
             None
         }
-    };
-
-    db_handler::close_connection(pool).await;
-
-    return match result {
-        Some(res) => Some(res.into()),
-        None => None,
     };
 }
 

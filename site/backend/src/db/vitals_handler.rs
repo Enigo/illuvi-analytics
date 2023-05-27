@@ -1,19 +1,19 @@
-use crate::db::db_handler;
 use crate::db::db_model::SingleTradeDb;
 use log::error;
 use model::model::price::Price;
 use model::model::vitals::{VitalsData, VitalsDataFloor};
 use sqlx::types::Decimal;
-use sqlx::{query, query_as, FromRow, Row};
+use sqlx::{query, query_as, FromRow, Pool, Postgres, Row};
 
-pub async fn get_all_vitals_for_token_address(token_address: &String) -> Option<VitalsData> {
-    let pool = db_handler::open_connection().await;
-
+pub async fn get_all_vitals_for_token_address(
+    pool: &Pool<Postgres>,
+    token_address: &String,
+) -> Option<VitalsData> {
     let total_assets: (i64, i64) = match query(
-        "select count(*), count(distinct (current_owner)) from asset where token_address=$1",
+        "select total, total_owners from asset_current_owner_mat_view where token_address=$1",
     )
     .bind(token_address)
-    .fetch_one(&pool)
+    .fetch_one(pool)
     .await
     {
         Ok(result) => (result.get(0), result.get(1)),
@@ -40,7 +40,7 @@ pub async fn get_all_vitals_for_token_address(token_address: &String) -> Option<
             order by tier, buy_price"
     )
         .bind(token_address)
-        .fetch_all(&pool).await {
+        .fetch_all(pool).await {
         Ok(result) => result.into_iter().map(|order| order.into()).collect(),
         Err(e) => {
             error!("Error fetching data: {e}");
@@ -49,19 +49,10 @@ pub async fn get_all_vitals_for_token_address(token_address: &String) -> Option<
     };
 
     let trades_volume = match query_as::<_, PriceDb>(
-        "select round(sum(total_eth), 2) as sum_eth, round(sum(total_usd), 2) as sum_usd
-                    from (
-                             select sum(od.buy_price * ch.eth) as total_eth,
-                                    sum(od.buy_price * ch.usd) as total_usd
-                             from order_data od
-                                      join coin_history ch on od.buy_currency = ch.symbol
-                                 and ch.datestamp = od.updated_on::date
-                             where od.status = 'filled' and od.token_address=$1
-                             group by od.buy_currency
-                         ) subquery;",
+        "select sum_eth, sum_usd from trade_volume_mat_view where token_address=$1",
     )
     .bind(token_address)
-    .fetch_one(&pool)
+    .fetch_one(pool)
     .await
     {
         Ok(result) => {
@@ -92,15 +83,13 @@ pub async fn get_all_vitals_for_token_address(token_address: &String) -> Option<
                 order by od.updated_on desc
                 limit 3;")
         .bind(token_address)
-        .fetch_all(&pool).await {
+        .fetch_all(pool).await {
         Ok(result) => result.into_iter().map(|trade| trade.into()).collect(),
         Err(e) => {
             error!("Error fetching data: {e}");
             vec![]
         }
     };
-
-    db_handler::close_connection(pool).await;
 
     return Some(VitalsData {
         total_assets: total_assets.0,

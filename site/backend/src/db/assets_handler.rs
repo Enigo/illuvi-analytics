@@ -1,16 +1,15 @@
-use crate::db::db_handler;
 use log::error;
 use model::model::asset::{AssetData, LandAssetData, TransactionData};
 use model::model::price::Price;
 use sqlx::types::{chrono::NaiveDateTime, Decimal};
-use sqlx::{query_as, FromRow, PgPool};
+use sqlx::{query_as, FromRow, PgPool, Pool, Postgres};
 
 pub async fn get_asset_data_for_token_address_and_token_id(
+    pool: &Pool<Postgres>,
     token_address: &String,
     token_id: &i32,
 ) -> Option<LandAssetData> {
-    let pool = db_handler::open_connection().await;
-    let transaction_data = get_all_transaction_data(&pool, token_address, token_id).await;
+    let transaction_data = get_all_transaction_data(pool, token_address, token_id).await;
 
     let land_asset: Option<LandAssetDb> = match query_as(
         "select token_id, token_address, current_owner, created_on, name, tier,\
@@ -19,7 +18,7 @@ pub async fn get_asset_data_for_token_address_and_token_id(
     )
     .bind(token_address)
     .bind(token_id)
-    .fetch_one(&pool)
+    .fetch_one(pool)
     .await
     {
         Ok(result) => Some(result),
@@ -64,8 +63,6 @@ pub async fn get_asset_data_for_token_address_and_token_id(
         }
         None => None,
     };
-
-    db_handler::close_connection(pool).await;
 
     return result;
 }

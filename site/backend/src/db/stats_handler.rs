@@ -1,4 +1,3 @@
-use crate::db::db_handler;
 use crate::db::db_model::SingleTradeDb;
 use log::error;
 use model::model::price::Price;
@@ -11,20 +10,19 @@ use sqlx::types::Decimal;
 use sqlx::{query, query_as, FromRow, Pool, Postgres, Row};
 use std::collections::BTreeMap;
 
-pub async fn get_all_stats_for_token_address(token_address: &String) -> Option<StatsData> {
-    let pool = db_handler::open_connection().await;
-
-    let assets = fetch_assets(token_address, &pool).await;
-    let transfers = fetch_transfers(token_address, &pool).await;
-    let total_trades = fetch_total_trades(token_address, &pool).await;
-    let trades_volume = fetch_trades_volume(token_address, &pool).await;
-    let most_transferred_token = fetch_most_transferred_token(token_address, &pool).await;
-    let most_traded_token = fetch_most_traded_token(token_address, &pool).await;
-    let most_traded_wallet = fetch_most_traded_wallet(token_address, &pool).await;
+pub async fn get_all_stats_for_token_address(
+    pool: &Pool<Postgres>,
+    token_address: &String,
+) -> Option<StatsData> {
+    let assets = fetch_assets(token_address, pool).await;
+    let transfers = fetch_transfers(token_address, pool).await;
+    let total_trades = fetch_total_trades(token_address, pool).await;
+    let trades_volume = fetch_trades_volume(token_address, pool).await;
+    let most_transferred_token = fetch_most_transferred_token(token_address, pool).await;
+    let most_traded_token = fetch_most_traded_token(token_address, pool).await;
+    let most_traded_wallet = fetch_most_traded_wallet(token_address, pool).await;
     let cheapest_and_most_expensive_trades_by_tier =
-        fetch_cheapest_and_most_expensive_trades_by_tier(token_address, &pool).await;
-
-    db_handler::close_connection(pool).await;
+        fetch_cheapest_and_most_expensive_trades_by_tier(token_address, pool).await;
 
     return Some(StatsData {
         total: StatsDataTotal {
@@ -42,7 +40,7 @@ pub async fn get_all_stats_for_token_address(token_address: &String) -> Option<S
 }
 
 async fn fetch_assets(token_address: &String, pool: &Pool<Postgres>) -> i64 {
-    return match query("select count(token_id) from mint where token_address=$1")
+    return match query("select count(*) from mint where token_address=$1")
         .bind(token_address)
         .fetch_one(pool)
         .await
@@ -56,7 +54,7 @@ async fn fetch_assets(token_address: &String, pool: &Pool<Postgres>) -> i64 {
 }
 
 async fn fetch_transfers(token_address: &String, pool: &Pool<Postgres>) -> i64 {
-    return match query("select count(token_id) from transfer where token_address=$1")
+    return match query("select count(*) from transfer where token_address=$1")
         .bind(token_address)
         .fetch_one(pool)
         .await
@@ -100,18 +98,8 @@ async fn fetch_trades_volume(
     pool: &Pool<Postgres>,
 ) -> Vec<StatsDataTradesVolume> {
     return match query_as::<_, StatsDataTradesVolumeDb>(
-        "select count(*) as total_trades,
-         round(SUM(od.buy_price), 6) as total_in_buy_currency,
-         od.buy_currency,
-         round(SUM(od.buy_price * ch.btc), 6) as total_btc,
-         round(SUM(od.buy_price * ch.eth), 6) as total_eth,
-         round(SUM(od.buy_price * ch.usd), 6) as total_usd,
-         round(SUM(od.buy_price * ch.eur), 6) as total_eur,
-         round(SUM(od.buy_price * ch.jpy), 6) as total_jpy
-          from order_data od join coin_history ch on od.buy_currency = ch.symbol AND ch.datestamp = od.updated_on::DATE
-                             where od.status='filled' and od.token_address=$1
-                             group by od.buy_currency
-                             order by total_usd desc;")
+        "select total_trades, total_in_buy_currency, buy_currency, total_btc, total_eth, total_usd, total_eur, total_jpy
+          from trade_volume_full_mat_view where token_address=$1;")
         .bind(token_address)
         .fetch_all(pool).await {
         Ok(result) => result.into_iter().map(|volume| StatsDataTradesVolume {
@@ -204,18 +192,9 @@ async fn fetch_cheapest_and_most_expensive_trades_by_tier(
     pool: &Pool<Postgres>,
 ) -> BTreeMap<i32, Vec<SingleTrade>> {
     return match query_as::<_, SingleTradeDb>(
-        "SELECT tier, token_id, name, sum_usd,  buy_currency, buy_price, wallet_to, wallet_from, updated_on, transaction_id
-            FROM (
-                     SELECT a.token_id, a.tier, a.name, round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency, od.buy_price, od.wallet_to, od.wallet_from, od.updated_on, od.transaction_id,
-                            ROW_NUMBER() OVER (PARTITION BY a.tier ORDER BY (od.buy_price * ch.usd) DESC) AS highest_rn,
-                            ROW_NUMBER() OVER (PARTITION BY a.tier ORDER BY (od.buy_price * ch.usd)) AS lowest_rn
-                     FROM asset a
-                              JOIN order_data od ON a.token_id = od.token_id
-                              JOIN coin_history ch ON ch.datestamp = od.updated_on::date AND od.buy_currency = ch.symbol
-                     WHERE od.status = 'filled' and od.token_address=$1
-                 ) subquery
-            WHERE highest_rn = 1 OR lowest_rn = 1
-            ORDER BY tier, sum_usd;")
+        "select tier, token_id, name, sum_usd,  buy_currency, buy_price, wallet_to, wallet_from, updated_on, transaction_id
+            from cheapest_and_most_expensive_trades_by_tier_mat_view
+            where token_address=$1")
         .bind(token_address)
         .fetch_all(pool).await {
         Ok(result) => {

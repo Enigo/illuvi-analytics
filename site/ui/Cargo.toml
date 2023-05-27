@@ -9,11 +9,11 @@ path = "src/main.rs"
 
 [dependencies]
 model = { path= "../model"}
-log = "0.4.6"
+log = "0.4.17"
 wasm-logger = "0.2.0"
 yew = { version = "0.20.0", features = ["csr"] }
 yew-router = "0.17"
-reqwest = { version = "0.11", features = ["json"] }
-wasm-bindgen-futures = "0.4.34"
-serde = { version = "1.0.159", features = ["derive"] }
-chrono = { version = "0.4.23", features = ["serde"] }
+reqwest = { version = "0.11.18", features = ["json"] }
+wasm-bindgen-futures = "0.4.36"
+serde = { version = "1.0.163", features = ["derive"] }
+chrono = { version = "0.4.24", features = ["serde"] }

@@ -10,12 +10,12 @@ path = "../loader/src/main.rs"
 [dependencies]
 log = "0.4.0"
 env_logger = "0.10.0"
-dotenvy = "0.15.6"
-reqwest = { version = "0.11", features = ["json"] }
-tokio = { version = "1.24.2", features = ["full"] }
-futures = { version = "0.3.25"}
-sqlx = { version = "0.6.2", features = [ "runtime-tokio-native-tls" , "postgres", "chrono" ] }
-serde = { version = "1.0.159", features = ["derive"] }
-async-trait = "0.1.64"
+dotenvy = "0.15.7"
+reqwest = { version = "0.11.18", features = ["json"] }
+tokio = { version = "1.28.1", features = ["full"] }
+futures = { version = "0.3.28"}
+sqlx = { version = "0.6.3", features = [ "runtime-tokio-native-tls" , "postgres", "chrono" ] }
+serde = { version = "1.0.163", features = ["derive"] }
+async-trait = "0.1.68"
 ethabi = "18.0.0"
 rust_decimal = "1.29.1"
