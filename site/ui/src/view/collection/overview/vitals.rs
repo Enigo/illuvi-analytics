@@ -62,7 +62,7 @@ fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
 
     fn get_single_floor_card(data_floor: &VitalsDataFloor, token_address: &String) -> Html {
         html!(
-          <div class="col-4">
+          <div class="col-md-4 mb-2">
             <div class="card">
               <h5 class="card-header">{&data_floor.name}</h5>
               <div class="card-body bg-pink text-white">
@@ -141,7 +141,7 @@ fn card_with_onlick(props: &CardProps) -> Html {
     };
     let volume = &props.trades_volume;
     html!(
-          <div class="col-4">
+          <div class="col-md mb-2">
             // summary adds pointer cursor
             <summary class="card" {onclick}>
               <h5 class="card-header">{"Total trades"}</h5>

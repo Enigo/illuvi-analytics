@@ -141,7 +141,7 @@ fn render_trades_amount_html(stats_data: &StatsData) -> Html {
             { trades_by_status.iter().map(|(status, trades)| {
                 let mut total_per_status = 0;
                 html!(
-                    <div class="col">
+                    <div class="col-md mb-2">
                         <div class="card">
                           <p class="card-header fs-4">{formatting_utils::capitalize_label(status)}</p>
                           <ul class="list-group list-group-flush">
@@ -200,7 +200,7 @@ fn get_single_most_token_card(
     most_data: &Vec<StatsDataMostEventForToken>,
 ) -> Html {
     html!(
-          <div class="col">
+          <div class="col-md mb-2">
             <div class="card">
               <h5 class="card-header">{title}</h5>
               <div class="card-body bg-pink text-white">
@@ -220,7 +220,7 @@ fn get_single_most_wallet_card(
     most_data: &Vec<StatsDataMostEventForWallet>,
 ) -> Html {
     html!(
-          <div class="col">
+          <div class="col-md mb-2">
             <div class="card">
               <h5 class="card-header">{title}</h5>
               <div class="card-body bg-pink text-white">

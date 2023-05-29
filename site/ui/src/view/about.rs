@@ -7,11 +7,11 @@ pub fn about_function_component() -> Html {
             <div class="container mt-1 p-4 bg-dark">
                  <div class="row justify-content-md-center text-center mb-4">
                     <p class="text-white fs-2">{"IlluviAnalytics is a passion project of"}</p>
-                    <div class="col-4 animate__animated animate__fadeInLeft animate__fast">
+                    <div class="col-md-4 animate__animated animate__fadeInLeft animate__fast">
                       <img src="/img/enigo.jpg" class="img-fluid border border-2 border-light rounded-4 shadow-gradient" width="250" height="250" alt="Enigo"/>
                       <p class="text-white fs-4">{"Enigo"}</p>
                     </div>
-                    <div class="col-4 animate__animated animate__fadeInRight animate__fast">
+                    <div class="col-md-4 animate__animated animate__fadeInRight animate__fast">
                       <img src="/img/angel.jpg" class="img-fluid border border-2 border-light rounded-4 shadow-gradient" width="250" height="250" alt="Angel"/>
                       <p class="text-white fs-4">{"Angel"}</p>
                     </div>
@@ -33,8 +33,10 @@ pub fn about_function_component() -> Html {
                 <div class="container">
                      <div class="row justify-content-md-center text-center mb-4">
                         <p class="text-white fs-2">{"Roadmap"}</p>
-                        <p class="text-white fs-4 mb-0">{"This is the very first version of the website in which we wanted to concentrate on utility"}</p>
-                        <p class="text-white fs-4">{"But there are great plans for more features"}</p>
+                        <p class="text-white fs-4 mb-0">{"This is just the beginning!"}</p>
+                        <p class="text-white fs-4 mb-0">{"While our focus for this initial version of the website was on utility, we have an exciting roadmap ahead filled with planned improvements and additional features."}</p>
+                        <p class="text-white fs-4 mb-0">{"Get ready for an enhanced user experience and even more valuable insights."}</p>
+                        <p class="text-white fs-4">{"Here's a glimpse of what's to come:"}</p>
                         <div class="col-md-5">
                             <ul class="list-group">
                               <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Fetching deposits and withdrawals data"}</p></li>

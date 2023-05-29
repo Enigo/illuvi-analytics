@@ -65,7 +65,7 @@ pub fn mints(mint: &MintData, page: UseStateHandle<i32>) -> Html {
             mints.iter().map(|mint| {
                 html!
                 {
-                    <div class="col text-center">
+                    <div class="col-md mb-2 text-center">
                         <Link<Route> to={Route::Asset {token_address: mint.token_address.to_string(), token_id: mint.token_id} } classes="img-fluid">
                             <img src={format!("{}{}{}", LAND_ICON, mint.token_id, ".svg")}
                             class="img-fluid"

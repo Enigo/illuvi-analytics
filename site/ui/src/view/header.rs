@@ -57,6 +57,9 @@ pub fn header() -> Html {
                         <img src="/img/favicon.png" alt="IlluviAnalytics" width="35" height="35" class="d-inline-block align-text-top" />
                         { "IlluviAnalytics" }
                     </Link<Route>>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                      <span class="navbar-toggler-icon"></span>
+                    </button>
                      <div class="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul class="navbar-nav">
                             { collections }

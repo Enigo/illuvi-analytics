@@ -141,7 +141,7 @@ pub fn get_asset_link(token_address: &String, token_id: i32) -> Html {
 
 pub fn get_single_card(title: &String, subtext: &String, count: &i64) -> Html {
     html!(
-      <div class="col">
+      <div class="col-md mb-2">
         <div class="card">
           <h5 class="card-header">{title}</h5>
           <div class="card-body bg-pink text-white">

@@ -26,7 +26,7 @@ pub fn get_single_trade_volume_card(props: &CardProps) -> Html {
     };
 
     html!(
-          <div class="col">
+          <div class="col-md mb-2">
             <div id="flip-card" class={format!("card p-0 {}", *flipped)} {onclick}>
               <div class="card-front">
                   <h5 class="card-header bg-light">{trade.name.clone()}</h5>

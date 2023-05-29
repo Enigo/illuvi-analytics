@@ -76,14 +76,14 @@ pub fn asset_land_function_component(props: &Props) -> Html {
             <div class="container-fluid p-5 bg-gray">
                 <div class="container animate__animated animate__fadeIn animate__fast">
                     <div class="row g-0">
-                      <div class="col-lg-5">
+                      <div class="col-lg-5 order-lg-1">
                         <img src={format!("{}{}{}", LAND_ICON, asset.asset_data.token_id, ".svg")}
                           class="w-100 img-fluid shadow-gradient"
                           loading="lazy" alt={asset.name.clone()}/>
                       </div>
-                      <div class="col-lg-7 d-flex align-items-center p-md-5">
+                      <div class="col-lg-7 d-flex align-items-center order-lg-2 text-center text-lg-start p-md-5">
                         <div class="d-flex flex-column">
-                          <p class="text-white fs-2 mb-2">{asset.name.clone()}</p>
+                          <p class="text-white fs-2 my-2">{asset.name.clone()}</p>
                           <p class="text-white fs-4 mb-2">{format!("Tier {}", asset.tier.clone())}</p>
                           if {asset.landmark != "None"} {
                               <p class="text-white fs-4 mb-2">{format!("Landmark: {}", asset.landmark)}</p>
@@ -161,49 +161,51 @@ pub fn asset_land_function_component(props: &Props) -> Html {
 
     fn events(asset: &LandAssetData) -> Html {
         html!(
-            <div class="container-fluid p-5 bg-gray">
+            <div class="container-fluid p-3 bg-gray">
                 <div class="container animate__animated animate__fadeIn animate__fast">
                     <div class="row">
-                        <div class="col-12">
+                        <div class="col-md-12">
                             <p class="text-white text-center fs-2 mb-4">{"Events"}</p>
                         </div>
                         <div class="col-md text-center">
-                            <table class="table text-white border-secondary">
-                              <thead>
-                                <tr>
-                                  <th scope="col">{"Id"}</th>
-                                  <th scope="col">{"Event"}</th>
-                                  <th scope="col">{"Wallet From"}</th>
-                                  <th scope="col">{"Wallet To"}</th>
-                                  <th scope="col">{"Price"}</th>
-                                  <th scope="col">{"Date"}</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {
-                                    asset.transaction_data.iter().map(|transaction| {
-                                        html!{
-                                            <tr key={transaction.updated_on.to_string()}>
-                                                if {transaction.id == Option::None} {
-                                                    <th scope="row" />
-                                                } else {
-                                                    <th scope="row">{formatting_utils::format_transaction_link(transaction.id.unwrap())}</th>
-                                                }
-                                                <td>{ transaction.event.clone() }</td>
-                                                <td>{formatting_utils::format_wallet_link(&transaction.wallet_from)}</td>
-                                                <td>{formatting_utils::format_wallet_link(&transaction.wallet_to)}</td>
-                                                if let Some(price) = &transaction.price {
-                                                    <td>{ formatting_utils::format_price(&price) }</td>
-                                                } else {
-                                                    <td></td>
-                                                }
-                                                <td>{ formatting_utils::format_date(transaction.updated_on) }</td>
-                                            </tr>
-                                         }
-                                    }).collect::<Html>()
-                                }
-                              </tbody>
-                            </table>
+                        <div class="table-responsive">
+                                <table class="table text-white border-secondary">
+                                  <thead>
+                                    <tr>
+                                      <th scope="col">{"Id"}</th>
+                                      <th scope="col">{"Event"}</th>
+                                      <th scope="col">{"Wallet From"}</th>
+                                      <th scope="col">{"Wallet To"}</th>
+                                      <th scope="col">{"Price"}</th>
+                                      <th scope="col">{"Date"}</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {
+                                        asset.transaction_data.iter().map(|transaction| {
+                                            html!{
+                                                <tr key={transaction.updated_on.to_string()}>
+                                                    if {transaction.id == Option::None} {
+                                                        <th scope="row" />
+                                                    } else {
+                                                        <th scope="row">{formatting_utils::format_transaction_link(transaction.id.unwrap())}</th>
+                                                    }
+                                                    <td>{ transaction.event.clone() }</td>
+                                                    <td>{formatting_utils::format_wallet_link(&transaction.wallet_from)}</td>
+                                                    <td>{formatting_utils::format_wallet_link(&transaction.wallet_to)}</td>
+                                                    if let Some(price) = &transaction.price {
+                                                        <td>{ formatting_utils::format_price(&price) }</td>
+                                                    } else {
+                                                        <td></td>
+                                                    }
+                                                    <td>{ formatting_utils::format_date(transaction.updated_on) }</td>
+                                                </tr>
+                                             }
+                                        }).collect::<Html>()
+                                    }
+                                  </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
