@@ -1,0 +1,13 @@
+[Unit]
+Description=Illuvi Analytics Loader
+After=network.target
+
+[Service]
+Restart=on-failure
+ExecStart=/opt/loader/illuvi-analytics-loader
+WorkingDirectory=/opt/loader
+StandardOutput=append:/var/log/illuvi-analytics/loader.log
+StandardError=append:/var/log/illuvi-analytics/loader.log
+
+[Install]
+WantedBy=multi-user.target

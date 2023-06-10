@@ -1,0 +1,6 @@
+[Path]
+Unit=illuvi-analytics-backend-watcher.service
+PathModified=/opt/backend
+
+[Install]
+WantedBy=multi-user.target

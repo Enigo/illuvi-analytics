@@ -1,0 +1,17 @@
+/var/log/illuvi-analytics/backend.log {
+  rotate 3
+  monthly
+  compress
+  missingok
+  notifempty
+  delaycompress
+}
+
+/var/log/illuvi-analytics/loader.log {
+  rotate 3
+  daily
+  compress
+  missingok
+  notifempty
+  delaycompress
+}

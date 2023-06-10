@@ -8,7 +8,7 @@ pub struct Params {
     token_address: String,
 }
 
-#[get("/stat/vitals")]
+#[get("/api/stat/vitals")]
 pub async fn get_vitals(
     pool: web::Data<Pool<Postgres>>,
     params: web::Query<Params>,

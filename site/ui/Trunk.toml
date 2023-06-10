@@ -1,0 +1,9 @@
+#[[hooks]]
+#stage = "pre_build"
+#command = "sh"
+#command_arguments = ["-c", "echo 'BACKEND_ENDPOINT=https://illuvi-analytics.com/api' > $TRUNK_SOURCE_DIR/.env"]
+#
+#[[hooks]]
+#stage = "post_build"
+#command = "sh"
+#command_arguments = ["-c", "echo 'BACKEND_ENDPOINT=http://localhost:8081/api' > $TRUNK_SOURCE_DIR/.env"]

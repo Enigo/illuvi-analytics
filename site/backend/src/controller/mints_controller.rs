@@ -9,7 +9,7 @@ pub struct Params {
     page: i16,
 }
 
-#[get("/mint/mints")]
+#[get("/api/mint/mints")]
 pub async fn get_mints(
     pool: web::Data<Pool<Postgres>>,
     params: web::Query<Params>,

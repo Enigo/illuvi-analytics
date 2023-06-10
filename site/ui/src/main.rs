@@ -23,6 +23,6 @@ fn app() -> Html {
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
 
-    info!("Starting app...");
+    info!("Nice to see you here!");
     yew::Renderer::<App>::new().render();
 }

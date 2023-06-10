@@ -1,0 +1,15 @@
+[Unit]
+Description=Illuvi Analytics Backend
+After=network.target
+
+[Service]
+User=illuvi
+Group=illuvi
+Restart=on-failure
+ExecStart=/opt/backend/illuvi-analytics-backend
+WorkingDirectory=/opt/backend
+StandardOutput=append:/var/log/illuvi-analytics/backend.log
+StandardError=append:/var/log/illuvi-analytics/backend.log
+
+[Install]
+WantedBy=multi-user.target

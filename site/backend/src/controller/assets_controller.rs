@@ -9,7 +9,7 @@ pub struct Params {
     token_id: i32,
 }
 
-#[get("/asset/asset")]
+#[get("/api/asset/asset")]
 pub async fn get_asset(
     pool: web::Data<Pool<Postgres>>,
     params: web::Query<Params>,

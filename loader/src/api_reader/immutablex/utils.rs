@@ -1,7 +1,7 @@
 use crate::api_reader::api_utils::fetch_single_api_response;
 use crate::db::immutablex::persistable::Persistable;
 use crate::model::immutablex::shared::PaginatedApi;
-use log::{error, info};
+use log::info;
 use serde::de::DeserializeOwned;
 use sqlx::{Pool, Postgres};
 
@@ -66,16 +66,13 @@ async fn fetch_and_get_result<T: DeserializeOwned + PaginatedApi>(
     };
     let response = fetch_single_api_response::<T>(url.as_str()).await;
     match response {
-        Ok(result) => {
+        Some(result) => {
             info!("Processing response for {url}");
             if !result.get_cursor().is_empty() {
                 return Some(result);
             }
             None
         }
-        Err(e) => {
-            error!("{url} API response cannot be parsed! {e}");
-            None
-        }
+        _ => None,
     }
 }

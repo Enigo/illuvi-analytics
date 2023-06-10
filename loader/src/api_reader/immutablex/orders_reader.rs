@@ -7,7 +7,7 @@ use crate::model::immutablex::order::{Order, SingleOrder};
 use crate::model::immutablex::trade::Trade;
 use crate::utils::env_utils;
 use futures::StreamExt;
-use log::{error, info};
+use log::info;
 use sqlx::{Pool, Postgres};
 
 const ORDERS_URL: &str = "https://api.x.immutable.com/v3/orders?sell_token_address=0x9e0d99b864e1ac12565125c5a82b59adea5a09cd&page_size=200&order_by=updated_at&direction=asc";
@@ -51,7 +51,7 @@ async fn enrich_wallet_to_and_transaction_id(pool: &Pool<Postgres>) {
                 if unprocessed_orders.contains(&seller_order_id) {
                     let url = format!("{}/{}", ORDER_URL, single_trade.buyer.order_id);
                     match api_utils::fetch_single_api_response::<SingleOrder>(url.as_str()).await {
-                        Ok(order) => {
+                        Some(order) => {
                             orders_handler::update_wallet_to_and_transaction_id_for_order_id(
                                 seller_order_id,
                                 order.wallet,
@@ -60,9 +60,7 @@ async fn enrich_wallet_to_and_transaction_id(pool: &Pool<Postgres>) {
                             )
                             .await;
                         }
-                        Err(e) => {
-                            error!("Order API {url} cannot be parsed! {e}")
-                        }
+                        None => {}
                     };
                 }
             }

@@ -4,6 +4,7 @@ use crate::controller::{
     stats_controller::get_stats, vitals_controller::get_vitals,
 };
 use crate::db::db_handler;
+use crate::utils::env_utils;
 use actix_cors::Cors;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
@@ -33,11 +34,14 @@ async fn main() -> std::io::Result<()> {
             .service(get_vitals)
             .wrap(
                 Cors::default()
-                    .allowed_origin("http://localhost:8080")
+                    .allowed_origin(&env_utils::as_string("ALLOWED_ORIGIN"))
                     .allowed_methods(vec!["GET"]),
             )
     })
-    .bind(("127.0.0.1", 8081))?
+    .bind((
+        env_utils::as_string("ENDPOINT"),
+        env_utils::as_parsed::<u16>("PORT"),
+    ))?
     .run()
     .await
 }

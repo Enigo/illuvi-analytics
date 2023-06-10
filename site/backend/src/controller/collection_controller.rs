@@ -8,7 +8,7 @@ pub struct Params {
     token_address: String,
 }
 
-#[get("/collection/collections")]
+#[get("/api/collection/collections")]
 pub async fn get_collections(pool: web::Data<Pool<Postgres>>) -> actix_web::Result<impl Responder> {
     return match collection_handler::get_all_collections(&pool).await {
         None => Ok(HttpResponse::NotFound().finish()),
@@ -16,7 +16,7 @@ pub async fn get_collections(pool: web::Data<Pool<Postgres>>) -> actix_web::Resu
     };
 }
 
-#[get("/collection/collection")]
+#[get("/api/collection/collection")]
 pub async fn get_collection(
     pool: web::Data<Pool<Postgres>>,
     params: web::Query<Params>,

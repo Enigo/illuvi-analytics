@@ -1,5 +1,5 @@
 [package]
-name = "illuvi-analytics-data-loader"
+name = "illuvi-analytics-loader"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,14 +8,15 @@ name = "illuvi-analytics"
 path = "../loader/src/main.rs"
 
 [dependencies]
-log = "0.4.0"
+log = "0.4.18"
 env_logger = "0.10.0"
 dotenvy = "0.15.7"
 reqwest = { version = "0.11.18", features = ["json"] }
-tokio = { version = "1.28.1", features = ["full"] }
+tokio = { version = "1.28.2", features = ["full"] }
 futures = { version = "0.3.28"}
 sqlx = { version = "0.6.3", features = [ "runtime-tokio-native-tls" , "postgres", "chrono" ] }
 serde = { version = "1.0.163", features = ["derive"] }
 async-trait = "0.1.68"
 ethabi = "18.0.0"
 rust_decimal = "1.29.1"
+openssl = { version = "0.10.54", features = ["vendored"] }

@@ -4,7 +4,7 @@ use crate::model::coingecko::coin::Coin;
 use crate::model::coingecko::coin_history::CoinHistory;
 use crate::utils::env_utils;
 use futures::StreamExt;
-use log::{error, info, warn};
+use log::{error, info};
 use sqlx::types::chrono::{NaiveDate, Utc};
 use sqlx::{Pool, Postgres};
 use std::thread;
@@ -27,7 +27,7 @@ async fn fetch_coins(pool: &Pool<Postgres>) {
             if !missing_symbols.is_empty() {
                 info!("Fetching ids for {:?}", missing_symbols);
                 match api_utils::fetch_single_api_response::<Vec<Coin>>(LIST_ENDPOINT).await {
-                    Ok(coins) => {
+                    Some(coins) => {
                         info!(
                             "Processing response from {LIST_ENDPOINT} with {} coins",
                             coins.len()
@@ -46,9 +46,7 @@ async fn fetch_coins(pool: &Pool<Postgres>) {
                             }
                         }
                     }
-                    Err(e) => {
-                        error!("Couldn't read {LIST_ENDPOINT}! {e}");
-                    }
+                    None => {}
                 }
             }
         }
@@ -65,20 +63,18 @@ async fn fetch_coins_history(pool: &Pool<Postgres>) {
             1,
         );
         match api_utils::fetch_single_api_response::<CoinHistory>(url.as_str()).await {
-            Ok(coin_history) => {
+            Some(coin_history) => {
                 info!("Processing response from {url}");
                 if coin_history.market_data.is_some() {
                     coins_history_handler::create_one(coin_history, date, pool).await;
                 } else {
-                    warn!(
+                    error!(
                         "No data for id {} and symbol {} and date {}",
                         coin_history.id, coin_history.symbol, date
                     );
                 }
             }
-            Err(e) => {
-                error!("Couldn't read {url}! {e}");
-            }
+            None => {}
         }
     }
 
