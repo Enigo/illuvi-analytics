@@ -40,7 +40,6 @@ pub fn about_function_component() -> Html {
                         <div class="col-md-5">
                             <ul class="list-group">
                               <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Fetching deposits and withdrawals data"}</p></li>
-                              <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Fetching today's conversion rate data"}</p></li>
                               <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Loading data for all Illuvium projects"}</p></li>
                               <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Adding new page for Illuvium Universe monetary data"}</p></li>
                               <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Adding new page for wallet stats"}</p></li>

@@ -5,7 +5,7 @@ use crate::model::coingecko::coin_history::CoinHistory;
 use crate::utils::env_utils;
 use futures::StreamExt;
 use log::{error, info};
-use sqlx::types::chrono::{NaiveDate, Utc};
+use sqlx::types::chrono::NaiveDate;
 use sqlx::{Pool, Postgres};
 use std::thread;
 use std::time::Duration;
@@ -54,6 +54,7 @@ async fn fetch_coins(pool: &Pool<Postgres>) {
     }
 }
 
+// Returned data is at 00:00:00 UTC for the given day
 async fn fetch_coins_history(pool: &Pool<Postgres>) {
     async fn process_date(date: &NaiveDate, symbol_id: &String, pool: &Pool<Postgres>) {
         // format macro cannot be used with consts
@@ -77,33 +78,24 @@ async fn fetch_coins_history(pool: &Pool<Postgres>) {
             None => {}
         }
     }
-
-    match coins_history_handler::get_all_missing_distinct_date_to_id_pairs(&pool).await {
-        Some(pairs) => {
-            let values_to_process = pairs
-                .into_iter()
-                // only want past dates
-                .filter(|pair| pair.0 != Utc::now().date_naive())
-                .collect::<Vec<_>>();
-            if !values_to_process.is_empty() {
-                info!(
-                    "Processing historical data for {:?}, total of {}",
-                    values_to_process,
-                    values_to_process.len()
-                );
-                for chunk in values_to_process.chunks(8) {
-                    futures::stream::iter(chunk)
-                        .for_each(|pair| process_date(&pair.0, &pair.1, pool))
-                        .await;
-                    if values_to_process.len() > 8 {
-                        // Limitation is 10-30 calls/MINUTE
-                        let sleep_for = 65;
-                        info!("Sleeping for {sleep_for} seconds to avoid rate limit!");
-                        thread::sleep(Duration::from_secs(sleep_for));
-                    }
-                }
+    let missing_pairs =
+        coins_history_handler::get_all_missing_distinct_date_to_id_pairs(&pool).await;
+    if !missing_pairs.is_empty() {
+        info!(
+            "Processing historical data for {:?}, total of {}",
+            missing_pairs,
+            missing_pairs.len()
+        );
+        for chunk in missing_pairs.chunks(8) {
+            futures::stream::iter(chunk)
+                .for_each(|pair| process_date(&pair.0, &pair.1, pool))
+                .await;
+            if missing_pairs.len() > 8 {
+                // Limitation is 10-30 calls/MINUTE
+                let sleep_for = 65;
+                info!("Sleeping for {sleep_for} seconds to avoid rate limit!");
+                thread::sleep(Duration::from_secs(sleep_for));
             }
         }
-        _ => {}
-    };
+    }
 }

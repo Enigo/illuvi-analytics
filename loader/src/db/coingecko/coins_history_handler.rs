@@ -5,7 +5,9 @@ use sqlx::{query, query_as, FromRow, Pool, Postgres};
 
 pub async fn create_one(coin_history: CoinHistory, date: &NaiveDate, pool: &Pool<Postgres>) {
     let current_price = coin_history.market_data.unwrap().current_price;
-    match query("insert into coin_history (symbol, btc, eth, eur, jpy, usd, datestamp) values ($1, $2, $3, $4, $5, $6, $7)")
+    match query("insert into coin_history (symbol, btc, eth, eur, jpy, usd, datestamp) values ($1, $2, $3, $4, $5, $6, $7)
+    ON CONFLICT (symbol, datestamp) DO UPDATE SET btc = EXCLUDED.btc, eth = EXCLUDED.eth, eur = EXCLUDED.eur, jpy = EXCLUDED.jpy, usd = EXCLUDED.usd;
+    ")
         .bind(coin_history.symbol.to_uppercase())
         .bind(current_price.btc)
         .bind(current_price.eth)
@@ -25,8 +27,8 @@ pub async fn create_one(coin_history: CoinHistory, date: &NaiveDate, pool: &Pool
 
 pub async fn get_all_missing_distinct_date_to_id_pairs(
     pool: &Pool<Postgres>,
-) -> Option<Vec<(NaiveDate, String)>> {
-    let result: Option<Vec<CoinHistoryData>> = match query_as("select distinct(dates) as datestamp, id from (
+) -> Vec<(NaiveDate, String)> {
+    return match query_as::<_, CoinHistoryData>("select distinct(dates) as datestamp, id from (
                                                                 select distinct m.minted_on::date as dates, c.id
                                                                 from mint m
                                                                     join coin c on c.symbol = m.currency
@@ -51,21 +53,14 @@ pub async fn get_all_missing_distinct_date_to_id_pairs(
         .fetch_all(pool)
         .await
     {
-        Ok(result) => Some(result),
+        Ok(result) => result.into_iter()
+            .map(|data| (data.datestamp, data.id))
+            .collect(),
         Err(e) => {
             error!("Error fetching data: {e}");
-            None
+            vec![]
         }
     };
-
-    match result {
-        Some(res) => Some(
-            res.into_iter()
-                .map(|data| (data.datestamp, data.id))
-                .collect(),
-        ),
-        None => None,
-    }
 }
 
 #[derive(FromRow)]

@@ -120,7 +120,6 @@ fn render_trades_volume(stats_data: &StatsData) -> Html {
             <p class="text-white fs-3 mb-2">{"Volume"}</p>
             <p class="text-white fs-5 mb-0">{"There are various cryptocurrencies that can be used to purchase the assets"}</p>
             <p class="text-white fs-5 mb-0">{"This section lists all of them conveniently converted into multiple other currencies"}</p>
-            <small class="text-white mb-1">{"The data below shows trades data excluding today"}</small>
             <div class="row row-cols-1 row-cols-md-3 g-3 justify-content-center mb-5 mt-1">
                 {
                     trades_volume.iter().map(|volume| {
