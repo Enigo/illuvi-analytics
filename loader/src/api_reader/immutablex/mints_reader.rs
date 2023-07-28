@@ -4,14 +4,15 @@ use crate::model::immutablex::mint::Mint;
 use crate::utils::env_utils;
 use sqlx::{Pool, Postgres};
 
-const MINTS_URL: &str = "https://api.x.immutable.com/v1/mints?token_address=0x9e0d99b864e1ac12565125c5a82b59adea5a09cd&page_size=200";
+const MINTS_URL: &str = "https://api.x.immutable.com/v1/mints?page_size=200&token_address=";
 
-pub async fn read_mints(pool: &Pool<Postgres>) {
+pub async fn read_mints(token_address: &String, pool: &Pool<Postgres>) {
     if env_utils::as_parsed::<bool>("MINTS_ENABLED") {
         utils::fetch_and_persist_all_api_responses_with_cursor_and_last_timestamp::<Mint>(
             pool,
-            MINTS_URL,
+            format!("{}{}", MINTS_URL, token_address).as_str(),
             "min_timestamp",
+            token_address,
             &MintSaver,
         )
         .await

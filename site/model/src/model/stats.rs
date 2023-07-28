@@ -11,12 +11,13 @@ pub struct StatsData {
     pub most_transferred_token: Vec<StatsDataMostEventForToken>,
     pub most_traded_token: Vec<StatsDataMostEventForToken>,
     pub most_traded_wallet: Vec<StatsDataMostEventForWallet>,
-    pub cheapest_and_most_expensive_trades_by_tier: BTreeMap<i32, Vec<SingleTrade>>,
+    pub cheapest_and_most_expensive_trades_by_attribute: BTreeMap<String, Vec<SingleTrade>>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct StatsDataTotal {
-    pub assets: i64,
+    pub assets_minted: i64,
+    pub assets_burnt: i64,
     pub transfers: i64,
     pub trades: i64,
 }

@@ -14,19 +14,20 @@ pub async fn get_all_stats_for_token_address(
     pool: &Pool<Postgres>,
     token_address: &String,
 ) -> Option<StatsData> {
-    let assets = fetch_assets(token_address, pool).await;
     let transfers = fetch_transfers(token_address, pool).await;
     let total_trades = fetch_total_trades(token_address, pool).await;
     let trades_volume = fetch_trades_volume(token_address, pool).await;
     let most_transferred_token = fetch_most_transferred_token(token_address, pool).await;
     let most_traded_token = fetch_most_traded_token(token_address, pool).await;
     let most_traded_wallet = fetch_most_traded_wallet(token_address, pool).await;
-    let cheapest_and_most_expensive_trades_by_tier =
-        fetch_cheapest_and_most_expensive_trades_by_tier(token_address, pool).await;
+    let cheapest_and_most_expensive_trades_by_attribute =
+        fetch_cheapest_and_most_expensive_trades_by_attribute(token_address, pool).await;
+    let total_minted_and_burnt = fetch_minted_and_burnt_assets(token_address, pool).await;
 
     return Some(StatsData {
         total: StatsDataTotal {
-            assets,
+            assets_minted: total_minted_and_burnt.0,
+            assets_burnt: total_minted_and_burnt.1,
             transfers,
             trades: total_trades.0,
         },
@@ -35,22 +36,8 @@ pub async fn get_all_stats_for_token_address(
         most_transferred_token,
         most_traded_token,
         most_traded_wallet,
-        cheapest_and_most_expensive_trades_by_tier,
+        cheapest_and_most_expensive_trades_by_attribute,
     });
-}
-
-async fn fetch_assets(token_address: &String, pool: &Pool<Postgres>) -> i64 {
-    return match query("select count(*) from mint where token_address=$1")
-        .bind(token_address)
-        .fetch_one(pool)
-        .await
-    {
-        Ok(result) => result.get(0),
-        Err(e) => {
-            error!("Error fetching data: {e}");
-            0
-        }
-    };
 }
 
 async fn fetch_transfers(token_address: &String, pool: &Pool<Postgres>) -> i64 {
@@ -99,7 +86,7 @@ async fn fetch_trades_volume(
 ) -> Vec<StatsDataTradesVolume> {
     return match query_as::<_, StatsDataTradesVolumeDb>(
         "select total_trades, total_in_buy_currency, buy_currency, total_btc, total_eth, total_usd, total_eur, total_jpy
-          from trade_volume_full_mat_view where token_address=$1;")
+          from trade_volume_full_mat_view where token_address=$1")
         .bind(token_address)
         .fetch_all(pool).await {
         Ok(result) => result.into_iter().map(|volume| StatsDataTradesVolume {
@@ -187,27 +174,47 @@ async fn fetch_most_traded_wallet(
     };
 }
 
-async fn fetch_cheapest_and_most_expensive_trades_by_tier(
+async fn fetch_cheapest_and_most_expensive_trades_by_attribute(
     token_address: &String,
     pool: &Pool<Postgres>,
-) -> BTreeMap<i32, Vec<SingleTrade>> {
+) -> BTreeMap<String, Vec<SingleTrade>> {
     return match query_as::<_, SingleTradeDb>(
-        "select tier, token_id, name, sum_usd,  buy_currency, buy_price, wallet_to, wallet_from, updated_on, transaction_id
-            from cheapest_and_most_expensive_trades_by_tier_mat_view
+        "select attribute, token_id, name, sum_usd,  buy_currency, buy_price, wallet_to, wallet_from, updated_on, transaction_id
+            from cheapest_and_most_expensive_trades_by_attribute_mat_view
             where token_address=$1")
         .bind(token_address)
         .fetch_all(pool).await {
         Ok(result) => {
-            let mut cheapest_and_most_expensive_trades_by_tier: BTreeMap<i32, Vec<SingleTrade>> = BTreeMap::new();
+            let mut cheapest_and_most_expensive_trades_by_attribute: BTreeMap<String, Vec<SingleTrade>> = BTreeMap::new();
             for trade in result {
-                let trades_map = cheapest_and_most_expensive_trades_by_tier.entry(trade.tier).or_insert(Vec::new());
+                let trades_map = cheapest_and_most_expensive_trades_by_attribute.entry(trade.attribute.clone()).or_insert(Vec::new());
                 trades_map.push(trade.into());
             }
-            cheapest_and_most_expensive_trades_by_tier
+            cheapest_and_most_expensive_trades_by_attribute
         }
         Err(e) => {
             error!("Error fetching data: {e}");
             BTreeMap::new()
+        }
+    };
+}
+
+async fn fetch_minted_and_burnt_assets(
+    token_address: &String,
+    pool: &Pool<Postgres>,
+) -> (i64, i64) {
+    return match query(
+        "select total, total_burnt from asset_current_owner_mat_view
+            where token_address=$1",
+    )
+    .bind(token_address)
+    .fetch_one(pool)
+    .await
+    {
+        Ok(result) => (result.get(0), result.get(1)),
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            (0, 0)
         }
     };
 }

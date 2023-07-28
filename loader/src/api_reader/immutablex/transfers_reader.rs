@@ -4,14 +4,16 @@ use crate::model::immutablex::transfer::Transfer;
 use crate::utils::env_utils;
 use sqlx::{Pool, Postgres};
 
-const TRANSFERS_URL: &str = "https://api.x.immutable.com/v1/transfers?token_address=0x9e0d99b864e1ac12565125c5a82b59adea5a09cd&page_size=200&order_by=created_at&direction=asc";
+const TRANSFERS_URL: &str =
+    "https://api.x.immutable.com/v1/transfers?page_size=200&order_by=created_at&token_address=";
 
-pub async fn read_transfers(pool: &Pool<Postgres>) {
+pub async fn read_transfers(token_address: &String, pool: &Pool<Postgres>) {
     if env_utils::as_parsed::<bool>("TRANSFERS_ENABLED") {
         utils::fetch_and_persist_all_api_responses_with_cursor_and_last_timestamp::<Transfer>(
             pool,
-            TRANSFERS_URL,
+            format!("{}{}", TRANSFERS_URL, token_address).as_str(),
             "min_timestamp",
+            token_address,
             &TransferSaver,
         )
         .await;

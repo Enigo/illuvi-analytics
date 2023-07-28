@@ -1,7 +1,7 @@
 use crate::model::immutablex::collection::Collection;
 use log::{error, info};
 use sqlx::types::chrono::DateTime;
-use sqlx::{Pool, Postgres, QueryBuilder};
+use sqlx::{query_scalar, Pool, Postgres, QueryBuilder};
 
 pub async fn create_one(collection: &Collection, pool: &Pool<Postgres>) {
     let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
@@ -35,4 +35,17 @@ pub async fn create_one(collection: &Collection, pool: &Pool<Postgres>) {
             error!("Couldn't insert values due to {e}")
         }
     }
+}
+
+pub async fn fetch_all_enabled_collections(pool: &Pool<Postgres>) -> Vec<String> {
+    return match query_scalar("select address from collection where enabled is true")
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => result,
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            vec![]
+        }
+    };
 }

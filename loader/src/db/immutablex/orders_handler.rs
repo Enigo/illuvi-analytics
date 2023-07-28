@@ -52,14 +52,20 @@ impl Persistable<Order> for OrderSaver {
         }
     }
 
-    async fn get_last_timestamp(&self, pool: &Pool<Postgres>) -> Option<NaiveDateTime> {
-        let result: (Option<NaiveDateTime>,) = query_as("select max(updated_on) from order_data")
-            .fetch_one(pool)
-            .await
-            .unwrap_or_else(|e| {
-                error!("Couldn't fetch data! {e}");
-                (None,)
-            });
+    async fn get_last_timestamp(
+        &self,
+        pool: &Pool<Postgres>,
+        token_address: &String,
+    ) -> Option<NaiveDateTime> {
+        let result: (Option<NaiveDateTime>,) =
+            query_as("select max(updated_on) from order_data where token_address=$1")
+                .bind(token_address)
+                .fetch_one(pool)
+                .await
+                .unwrap_or_else(|e| {
+                    error!("Couldn't fetch data! {e}");
+                    (None,)
+                });
 
         result.0
     }

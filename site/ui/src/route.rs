@@ -1,5 +1,5 @@
 use crate::view::{
-    about::About, asset::AssetLand, collection::overview::page::Collection,
+    about::About, asset::page::Asset, collection::overview::page::Collection,
     collection::stats::page::CollectionStats, home::Home,
 };
 use yew::prelude::*;
@@ -36,7 +36,7 @@ pub fn switch(route: Route) -> Html {
         Route::Asset {
             token_address,
             token_id,
-        } => html! {<AssetLand token_address={token_address} token_id={token_id}/>},
+        } => html! {<Asset token_address={token_address} token_id={token_id}/>},
         Route::NotFound => html! { <p class="text-white">{ "Not found" }</p> },
     }
 }

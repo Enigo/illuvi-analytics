@@ -116,11 +116,11 @@ pub fn format_wallet_link(wallet: &String) -> Html {
         </a>);
 }
 
-pub fn format_transaction_link(transaction_id: i32) -> Html {
+pub fn format_transaction_link(transaction_id: i32, text: String) -> Html {
     let onclick = get_onclick_to_stop_link_bubbling();
 
     html!(
-        <a href={format!("{}{}", IMMUTASCAN_TX, transaction_id)} target="_blank" {onclick} class="text-decoration-none">{ transaction_id }</a>
+        <a href={format!("{}{}", IMMUTASCAN_TX, transaction_id)} target="_blank" {onclick} class="text-decoration-none">{ text }</a>
     )
 }
 
@@ -133,19 +133,19 @@ fn get_onclick_to_stop_link_bubbling() -> Callback<MouseEvent> {
 
 pub fn get_asset_link(token_address: &String, token_id: i32) -> Html {
     html! {
-        <Link<Route> to={Route::Asset {token_address: token_address.to_owned(), token_id: token_id} } classes="btn btn-primary me-1">
+        <Link<Route> to={Route::Asset {token_address: token_address.to_owned(), token_id: token_id} } classes="btn btn-primary me-1 mb-1">
             { format!("Token {}", token_id) }
         </Link<Route>>
     }
 }
 
-pub fn get_single_card(title: &String, subtext: &String, count: &i64) -> Html {
+pub fn get_single_card(title: &String, subtext: &String, text: &String) -> Html {
     html!(
       <div class="col-md mb-2">
         <div class="card">
           <h5 class="card-header">{title}</h5>
           <div class="card-body bg-pink text-white">
-            <p class="card-text fs-4 mb-0">{format_number_with_spaces(count)}</p>
+            <p class="card-text fs-4 mb-0">{text}</p>
             <p class="card-text"><small class="text-white">{subtext}</small></p>
           </div>
         </div>

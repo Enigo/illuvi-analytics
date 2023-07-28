@@ -6,7 +6,6 @@ use yew_router::prelude::*;
 
 use crate::route::Route;
 
-const LAND_ICON: &str = "https://assets.illuvium-game.io/illuvidex/land/land-";
 const MINTS_PER_PAGE: i8 = 50;
 
 #[derive(Properties, PartialEq)]
@@ -14,7 +13,7 @@ pub struct Props {
     pub token_address: String,
 }
 
-// currently there is an issue that the state is not cleared after the new page\token_address is called
+// currently there is an issue that the state is not cleared after the new page\token_address is called - check SO your own question
 #[function_component(CollectionMint)]
 pub fn collection_mint_function_component(props: &Props) -> Html {
     let page = use_state(|| 1);
@@ -67,8 +66,7 @@ pub fn mints(mint: &MintData, page: UseStateHandle<i32>) -> Html {
                 {
                     <div class="col-md mb-2 text-center">
                         <Link<Route> to={Route::Asset {token_address: mint.token_address.to_string(), token_id: mint.token_id} } classes="img-fluid">
-                            <img src={format!("{}{}{}", LAND_ICON, mint.token_id, ".svg")}
-                            class="img-fluid"
+                            <img src={mint.image_url.clone()} class="img-fluid" width="175" height="175"
                             loading="lazy" alt={mint.name.clone()}/>
                         </Link<Route>>
                         <p class="text-white">{mint.name.clone()}</p>

@@ -1,6 +1,5 @@
 use crate::api_reader::api_utils;
 use crate::api_reader::immutablex::utils;
-use crate::db::db_handler;
 use crate::db::immutablex::orders_handler;
 use crate::db::immutablex::orders_handler::OrderSaver;
 use crate::model::immutablex::order::{Order, SingleOrder};
@@ -10,35 +9,29 @@ use futures::StreamExt;
 use log::info;
 use sqlx::{Pool, Postgres};
 
-const ORDERS_URL: &str = "https://api.x.immutable.com/v3/orders?sell_token_address=0x9e0d99b864e1ac12565125c5a82b59adea5a09cd&page_size=200&order_by=updated_at&direction=asc";
+const ORDERS_URL: &str = "https://api.x.immutable.com/v3/orders?page_size=200&order_by=updated_at&direction=asc&sell_token_address=";
 const ORDER_URL: &str = "https://api.x.immutable.com/v3/orders";
-const TRADES_URL: &str = "https://api.x.immutable.com/v3/trades?party_b_token_address=0x9e0d99b864e1ac12565125c5a82b59adea5a09cd&page_size=200&party_b_token_id=";
 
-pub async fn read_orders(pool: &Pool<Postgres>) {
+pub async fn read_orders(token_address: &String, pool: &Pool<Postgres>) {
     if env_utils::as_parsed::<bool>("ORDERS_ENABLED") {
         utils::fetch_and_persist_all_api_responses_with_cursor_and_last_timestamp::<Order>(
             pool,
-            ORDERS_URL,
+            format!("{}{}", ORDERS_URL, token_address).as_str(),
             "updated_min_timestamp",
+            token_address,
             &OrderSaver,
         )
         .await;
 
-        enrich_order_data().await;
+        enrich_wallet_to_and_transaction_id(token_address, &pool).await;
     }
-}
-
-async fn enrich_order_data() {
-    let pool = db_handler::open_connection().await;
-    enrich_wallet_to_and_transaction_id(&pool).await;
-    db_handler::close_connection(pool).await;
 }
 
 // There is currently no other way but to go thru multiple API calls
 // https://forum.immutable.com/t/how-to-get-wallet-that-bough-given-asset/359/7
-async fn enrich_wallet_to_and_transaction_id(pool: &Pool<Postgres>) {
-    async fn process_id(token_id: i32, pool: &Pool<Postgres>) {
-        let url = format!("{}{}", TRADES_URL, token_id);
+async fn enrich_wallet_to_and_transaction_id(token_address: &String, pool: &Pool<Postgres>) {
+    async fn process_id(token_address: &String, token_id: i32, pool: &Pool<Postgres>) {
+        let url = format!("https://api.x.immutable.com/v3/trades?&page_size=200&party_b_token_id={}&party_b_token_address={}", token_id, token_address);
         let all_trades = utils::fetch_all_api_responses_with_cursor::<Trade>(url.as_str()).await;
         for trade in all_trades {
             // all_trades return trades that might have been already updated (since it is all trades for the given token_id)
@@ -76,7 +69,7 @@ async fn enrich_wallet_to_and_transaction_id(pool: &Pool<Postgres>) {
                 token_ids.len()
             );
             let mut futures = futures::stream::iter(token_ids)
-                .map(|token_id| process_id(token_id, &pool))
+                .map(|token_id| process_id(token_address, token_id, &pool))
                 .buffer_unordered(3);
 
             while let Some(_) = futures.next().await {}

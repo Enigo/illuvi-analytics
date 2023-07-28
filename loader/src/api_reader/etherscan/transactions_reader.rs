@@ -15,7 +15,7 @@ const LAND_CONTRACT: &str = "0x7a47f7707c4b2f2b1def04a47cd8681d48eadeb8";
 const LAND_CONTRACT_CREATION_BLOCK: &str = "14846665";
 const LAND_FUNCTION_NAME: &str = "buyL2";
 
-pub async fn read_transactions(pool: &Pool<Postgres>) {
+pub async fn read_land_transactions(pool: &Pool<Postgres>) {
     if !env_utils::as_parsed::<bool>("ETHERSCAN_ENABLED") {
         return;
     }

@@ -5,7 +5,7 @@ use sqlx::{query, query_as, FromRow, Pool, Postgres, Row};
 pub async fn get_all_mints_for_token_address(
     pool: &Pool<Postgres>,
     token_address: &String,
-    page: i16,
+    page: i32,
 ) -> Option<MintData> {
     let total: i64 = match query("select count(token_id) from mint where token_address=$1")
         .bind(token_address)
@@ -20,9 +20,16 @@ pub async fn get_all_mints_for_token_address(
     };
 
     let result: Option<MintData> = match query_as::<_, MintDb>(
-        "select m.token_id, m.token_address, a.name from mint m
-        join asset a on m.token_id = a.token_id where m.token_address=$1
-        order by a.tier desc, m.token_id
+        "select m.token_id, m.token_address, a.name, a.metadata->>'image_url' as image_url from mint m
+                                                    join asset a on m.token_id = a.token_id and m.token_address = a.token_address
+                                           where m.token_address=$1
+            ORDER BY
+                CASE
+                    WHEN m.token_address = '0x9e0d99b864e1ac12565125c5a82b59adea5a09cd' THEN a.metadata->>'tier'
+                    END desc,
+                CASE
+                    WHEN m.token_address = '0xc1f1da534e227489d617cd742481fd5a23f6a003' THEN a.updated_on
+                    END desc, m.token_id
         limit 50
         offset $2",
     )
@@ -51,6 +58,7 @@ struct MintDb {
     token_id: i32,
     token_address: String,
     name: String,
+    image_url: String,
 }
 
 impl From<MintDb> for Mint {
@@ -59,6 +67,7 @@ impl From<MintDb> for Mint {
             token_id: mint.token_id,
             token_address: mint.token_address,
             name: mint.name,
+            image_url: mint.image_url,
         }
     }
 }

@@ -36,15 +36,14 @@ pub fn get_single_trade_volume_card(props: &CardProps) -> Html {
                       <li class="list-group-item bg-pink text-white fs-5 py-3 px-0">
                         {"From "}{formatting_utils::format_wallet_link(&trade.wallet_from)}{" to "}{formatting_utils::format_wallet_link(&trade.wallet_to)}
                       </li>
-                      <li class="list-group-item bg-pink text-white fs-5 py-3 px-0">{formatting_utils::format_date(trade.updated_on)}</li>
+                      <li class="list-group-item bg-pink text-white fs-5 py-3 px-0">{formatting_utils::format_transaction_link(trade.transaction_id, formatting_utils::format_date(trade.updated_on))}</li>
                     </ul>
-                    <p class="card-text"><small class="text-white">{formatting_utils::format_transaction_link(trade.transaction_id)}</small></p>
                   </div>
               </div>
               <div class="card-back d-flex flex-column">
                     <h5 class="card-header bg-light">{trade.name.clone()}</h5>
                     <div class="card-body text-white bg-pink d-flex flex-column justify-content-center align-items-center py-3 px-0">
-                        <p class="card-text fs-2">{formatting_utils::format_price(&trade.usd_price)}</p>
+                        <p class="card-text fs-3">{formatting_utils::format_price(&trade.usd_price)}</p>
                         {formatting_utils::get_asset_link(&props.token_address, trade.token_id)}
                         <div class="mt-4"><i class="fas fa-undo-alt text-white fs-5"></i></div>
                     </div>

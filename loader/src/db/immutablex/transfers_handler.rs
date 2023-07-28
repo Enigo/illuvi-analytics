@@ -39,14 +39,20 @@ impl Persistable<Transfer> for TransferSaver {
         }
     }
 
-    async fn get_last_timestamp(&self, pool: &Pool<Postgres>) -> Option<NaiveDateTime> {
-        let result: (Option<NaiveDateTime>,) = query_as("select max(created_on) from transfer")
-            .fetch_one(pool)
-            .await
-            .unwrap_or_else(|e| {
-                error!("Couldn't fetch data! {e}");
-                (None,)
-            });
+    async fn get_last_timestamp(
+        &self,
+        pool: &Pool<Postgres>,
+        token_address: &String,
+    ) -> Option<NaiveDateTime> {
+        let result: (Option<NaiveDateTime>,) =
+            query_as("select max(created_on) from transfer where token_address=$1")
+                .bind(token_address)
+                .fetch_one(pool)
+                .await
+                .unwrap_or_else(|e| {
+                    error!("Couldn't fetch data! {e}");
+                    (None,)
+                });
 
         result.0
     }

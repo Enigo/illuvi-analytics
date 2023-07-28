@@ -1,5 +1,6 @@
 use crate::model::immutablex::shared::PaginatedApi;
 use serde::Deserialize;
+use std::collections::HashMap;
 
 #[derive(Deserialize, Debug)]
 pub struct Asset {
@@ -21,22 +22,10 @@ impl PaginatedApi for Asset {
 pub struct TheResult {
     pub token_id: String,
     pub token_address: String,
-    pub metadata: Metadata,
+    pub name: String,
+    pub metadata: HashMap<String, serde_json::Value>,
     #[serde(rename = "user")]
     pub current_owner: String,
     pub created_at: String,
     pub updated_at: String,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Metadata {
-    pub name: String,
-    pub tier: i32,
-    pub solon: i32,
-    pub carbon: i32,
-    pub crypton: i32,
-    pub silicon: i32,
-    pub hydrogen: i32,
-    pub hyperion: i32,
-    pub landmark: String,
 }

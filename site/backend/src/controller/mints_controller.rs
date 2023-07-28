@@ -6,7 +6,7 @@ use sqlx::{Pool, Postgres};
 #[derive(Deserialize)]
 pub struct Params {
     token_address: String,
-    page: i16,
+    page: i32,
 }
 
 #[get("/api/mint/mints")]

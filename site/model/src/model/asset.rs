@@ -3,14 +3,6 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct AssetData {
-    pub token_id: i32,
-    pub token_address: String,
-    pub current_owner: String,
-    pub last_owner_change: NaiveDateTime,
-}
-
-#[derive(Serialize, Deserialize)]
 pub struct TransactionData {
     pub id: Option<i32>,
     pub wallet_from: String,
@@ -21,16 +13,38 @@ pub struct TransactionData {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct AssetData {
+    pub land: Option<LandAssetData>,
+    pub d1sk: Option<D1skAssetData>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct LandAssetData {
-    pub asset_data: AssetData,
-    pub transaction_data: Vec<TransactionData>,
-    pub name: String,
-    pub tier: i32,
-    pub solon: i32,
-    pub carbon: i32,
-    pub crypton: i32,
-    pub silicon: i32,
-    pub hydrogen: i32,
-    pub hyperion: i32,
+    pub common_asset_data: CommonAssetData,
+    pub tier: String,
+    pub solon: String,
+    pub carbon: String,
+    pub crypton: String,
+    pub silicon: String,
+    pub hydrogen: String,
+    pub hyperion: String,
     pub landmark: String,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
+pub struct D1skAssetData {
+    pub common_asset_data: CommonAssetData,
+    pub alpha: bool,
+    pub wave: String,
+    pub set: String,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
+pub struct CommonAssetData {
+    pub token_id: i32,
+    pub token_address: String,
+    pub current_owner: String,
+    pub burned: bool,
+    pub name: String,
+    pub image_url: String,
 }

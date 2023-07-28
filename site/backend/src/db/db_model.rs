@@ -5,7 +5,7 @@ use sqlx::FromRow;
 
 #[derive(FromRow)]
 pub struct SingleTradeDb {
-    pub tier: i32,
+    pub attribute: String,
     pub token_id: i32,
     pub name: String,
     pub sum_usd: Decimal,

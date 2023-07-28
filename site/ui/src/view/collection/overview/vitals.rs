@@ -2,12 +2,12 @@ use crate::utils::{api_utils, formatting_utils};
 use crate::view::collection::common::{no_data::NoData, trade_card::TradeCardWithFlip};
 use log::error;
 use model::model::price::Price;
-use model::model::vitals::{VitalsData, VitalsDataFloor};
-use std::collections::BTreeMap;
+use model::model::vitals::{TotalMintedBurnt, VitalsData, VitalsDataFloor};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::route::Route;
+use crate::utils::formatting_utils::format_number_with_spaces;
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
@@ -56,39 +56,23 @@ pub fn collection_mint_function_component(props: &Props) -> Html {
 }
 
 fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
-    if vitals_data.floor.is_empty() {
+    if vitals_data.floor_by_attribute.is_empty() {
         return html!( <NoData /> );
     }
 
-    fn get_single_floor_card(data_floor: &VitalsDataFloor, token_address: &String) -> Html {
+    let attribute_data_html = vitals_data.floor_by_attribute.iter().map(|(attribute, data_floors)|
         html!(
-          <div class="col-md-4 mb-2">
-            <div class="card">
-              <h5 class="card-header">{&data_floor.name}</h5>
-              <div class="card-body bg-pink text-white">
-                <p class="card-text fs-4">{formatting_utils::format_price(&data_floor.price)}</p>
-                <Link<Route> to={Route::Asset {token_address: token_address.clone(), token_id: data_floor.token_id} } classes="btn btn-primary">
-                    { format!("Token {}", data_floor.token_id) }
-                </Link<Route>>
-              </div>
-            </div>
-          </div>
-        )
-    }
-
-    let mut grouped_data = BTreeMap::new();
-    for data in &vitals_data.floor {
-        grouped_data
-            .entry(data.tier)
-            .or_insert_with(Vec::new)
-            .push(data);
-    }
-
-    let floor_data_html = grouped_data.iter().map(|(tier, data_floors)|
-        html!(
-            <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast animate__delay-0.25s">
-                <p class="text-white fs-3">{format!("Tier {} floors", tier)}</p>
-                { data_floors.iter().map(|data_floor|get_single_floor_card(data_floor, token_address)).collect::<Html>()}
+            <div class="row text-center my-3 pb-3 justify-content-center animate__animated animate__fadeIn animate__fast animate__delay-0.25s">
+                <p class="text-white fs-3">{attribute}</p>
+                <div class="row rounded border justify-content-center p-3">
+                    <p class="text-white fs-4">{ "Floors" }</p>
+                    { data_floors.iter().map(|data_floor|get_single_floor_card(data_floor, token_address)).collect::<Html>()}
+                    <p class="text-white fs-4 pt-3">{ "Minted | Burnt" }</p>
+                    { vitals_data.minted_burnt_by_attribute.get(attribute)
+                        .unwrap()
+                        .into_iter()
+                        .map(|data|get_single_minted_burnt_card(data)).collect::<Html>()}
+                </div>
             </div>
         )
     ).collect::<Html>();
@@ -112,15 +96,50 @@ fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
         <div class="container-fluid p-5 bg-gray">
             <div class="container">
                 <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast animate__delay-0.25s">
-                    { formatting_utils::get_single_card(&String::from("Assets"), &String::from("minted"), &vitals_data.total_assets) }
-                    { formatting_utils::get_single_card(&String::from("Unique holders"), &String::from("wallets"), &vitals_data.unique_holders) }
+                    { formatting_utils::get_single_card(&String::from("Assets"), &String::from("minted"), &format_number_with_spaces(&vitals_data.total_assets)) }
+                    { formatting_utils::get_single_card(&String::from("Unique holders"), &String::from("wallets"), &format_number_with_spaces(&vitals_data.unique_holders)) }
                     { html! { <CardWithOnClick {trades_volume} /> } }
                 </div>
-                { floor_data_html }
                 { last_trades_html }
+                { attribute_data_html }
             </div>
         </div>
     };
+}
+
+fn get_single_floor_card(data_floor: &VitalsDataFloor, token_address: &String) -> Html {
+    html!(
+      <div class="col-md-4 mb-2">
+        <div class="card">
+          <h5 class="card-header">{&data_floor.name}</h5>
+          <div class="card-body bg-pink text-white">
+            <p class="card-text fs-4">{formatting_utils::format_price(&data_floor.price)}</p>
+            <Link<Route> to={Route::Asset {token_address: token_address.clone(), token_id: data_floor.token_id} } classes="btn btn-primary">
+                { format!("Token {}", data_floor.token_id) }
+            </Link<Route>>
+          </div>
+        </div>
+      </div>
+    )
+}
+
+fn get_single_minted_burnt_card(data: &TotalMintedBurnt) -> Html {
+    html!(
+      <div class="col-md-4 mb-2">
+        <div class="card">
+          <div class="card-body bg-pink text-white">
+             <ul class="list-group list-group-flush">
+                <li class="list-group-item bg-pink text-white fs-5 d-flex justify-content-between align-items-center w-100">
+                    <span class="badge bg-primary">{"Minted"}</span>{ format_number_with_spaces(&data.total_minted) }</li>
+                <li class="list-group-item bg-pink text-white fs-5 d-flex justify-content-between align-items-center w-100">
+                    <span class="badge bg-primary">{"Burnt"}</span> { format_number_with_spaces(&data.total_burnt) }</li>
+                <li class="list-group-item bg-pink text-white fs-5 d-flex justify-content-between align-items-center w-100">
+                    <span class="badge bg-primary">{"Burn Rate"}</span>{ format!("{}%", (data.total_burnt as f64 / data.total_minted as f64 * 100.0).round() as i64) }</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    )
 }
 
 #[derive(Properties, PartialEq)]

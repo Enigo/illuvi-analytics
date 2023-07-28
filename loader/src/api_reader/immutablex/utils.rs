@@ -13,9 +13,10 @@ pub async fn fetch_and_persist_all_api_responses_with_cursor_and_last_timestamp<
     pool: &Pool<Postgres>,
     url: &str,
     last_timestamp_url_param: &str,
+    token_address: &String,
     persistable: &dyn Persistable<T>,
 ) {
-    let last_timestamp = match persistable.get_last_timestamp(pool).await {
+    let last_timestamp = match persistable.get_last_timestamp(pool, token_address).await {
         None => String::from(FALLBACK_LAST_TIMESTAMP),
         Some(value) => value.format("%Y-%m-%dT%H:%M:%SZ").to_string(),
     };

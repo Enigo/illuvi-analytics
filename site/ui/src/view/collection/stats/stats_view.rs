@@ -1,3 +1,4 @@
+use crate::utils::formatting_utils::format_number_with_spaces;
 use crate::utils::{api_utils, formatting_utils};
 use crate::view::collection::common::{no_data::NoData, trade_card::TradeCardWithFlip};
 use crate::view::collection::stats::trade_volume_card::TradeVolumeCardWithFlip;
@@ -50,7 +51,7 @@ pub fn stats_view_function_component(props: &Props) -> Html {
 }
 
 fn stats_view(stats_data: &StatsData, token_address: &String) -> Html {
-    if stats_data.total.assets == 0 {
+    if stats_data.total.assets_minted == 0 {
         return html!( <NoData /> );
     }
 
@@ -87,12 +88,18 @@ fn statistics(stats_data: &StatsData, token_address: &String) -> Html {
 
 fn render_totals(total: &StatsDataTotal) -> Html {
     return html! {
+        <>
         <div class="row p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast">
             <p class="text-white fs-2 mb-2">{"Totals"}</p>
-            { formatting_utils::get_single_card(&String::from("Assets"), &String::from("minted"), &total.assets) }
-            { formatting_utils::get_single_card(&String::from("Transfers"), &String::from("made"), &total.transfers) }
-            { formatting_utils::get_single_card(&String::from("Trades"), &String::from("active | cancelled | filled"), &total.trades) }
+            { formatting_utils::get_single_card(&String::from("Minted"), &String::from("assets"), &format_number_with_spaces(&total.assets_minted)) }
+            { formatting_utils::get_single_card(&String::from("Burnt"), &String::from("assets"), &format_number_with_spaces(&total.assets_burnt)) }
+            { formatting_utils::get_single_card(&String::from("Burn Rate"), &String::from("%"), &((total.assets_burnt as f64 / total.assets_minted as f64 * 100.0).round() as i64).to_string()) }
         </div>
+        <div class="row row-cols-1 row-cols-md-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast">
+            { formatting_utils::get_single_card(&String::from("Transfers"), &String::from("made"), &format_number_with_spaces(&total.transfers)) }
+            { formatting_utils::get_single_card(&String::from("Trades"), &String::from("active | cancelled | filled"), &format_number_with_spaces(&total.trades)) }
+        </div>
+        </>
     };
 }
 
@@ -164,14 +171,14 @@ fn render_cheapest_and_most_expensive_trades(
     stats_data: &StatsData,
     token_address: &String,
 ) -> Html {
-    let trades_by_tier = &stats_data.cheapest_and_most_expensive_trades_by_tier;
+    let trades_by_attribute = &stats_data.cheapest_and_most_expensive_trades_by_attribute;
     return html! {
         <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast">
-            <p class="text-white fs-3 mb-2">{"Cheapest | Most Expensive"}</p>
-            { trades_by_tier.iter().map(|(tier, trades)| {
+            <p class="text-white fs-3 mb-2">{"Cheapest | Most Expensive Trades"}</p>
+            { trades_by_attribute.iter().map(|(attribute, trades)| {
                 html! {
                      <div class="row text-center mb-5">
-                        <p class="text-white fs-4 mb-2">{format!("Tier {}", tier)}</p>
+                        <p class="text-white fs-4 mb-2">{attribute}</p>
                         { trades.iter().map(|trade| {
                             let trade = trade.clone();
                             let token_address = token_address.clone();
