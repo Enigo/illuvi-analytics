@@ -1,4 +1,4 @@
-use crate::utils::api_utils;
+use crate::utils::{api_utils, navigation_utils};
 use log::error;
 use model::model::collection::CollectionData;
 use yew::prelude::*;
@@ -16,6 +16,7 @@ pub fn collection_project_function_component(props: &Props) -> Html {
         let collection = collection.clone();
         use_effect_with_deps(
             move |_| {
+                navigation_utils::scroll_to_top();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<CollectionData>(
                         format!("/collection/collection?token_address={}", token_address).as_str(),

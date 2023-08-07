@@ -1,7 +1,6 @@
-use yew::prelude::*;
-
 use crate::view::collection::overview::{mint::CollectionMint, vitals::CollectionVitals};
 use crate::view::collection::project::CollectionProject;
+use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
 pub struct Props {

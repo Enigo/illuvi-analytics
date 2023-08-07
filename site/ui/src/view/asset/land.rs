@@ -9,11 +9,11 @@ pub struct Props {
 
 #[function_component(AssetLand)]
 pub fn asset_land_function_component(props: &Props) -> Html {
-    let land = &props.land;
+    let asset = &props.land;
     return html! {
         <section>
             {
-                intro(&land)
+                intro(&asset)
             }
         </section>
     };

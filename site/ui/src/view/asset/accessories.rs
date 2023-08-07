@@ -1,17 +1,17 @@
 use crate::route::Route;
 use crate::utils::formatting_utils;
-use model::model::asset::D1skAssetData;
+use model::model::asset::AccessoriesAssetData;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
-    pub d1sk: D1skAssetData,
+    pub accessories: AccessoriesAssetData,
 }
 
-#[function_component(AssetD1sk)]
+#[function_component(AssetAccessories)]
 pub fn asset_land_function_component(props: &Props) -> Html {
-    let asset = &props.d1sk;
+    let asset = &props.accessories;
     return html! {
         <section>
             {
@@ -21,8 +21,23 @@ pub fn asset_land_function_component(props: &Props) -> Html {
     };
 }
 
-fn intro(asset: &D1skAssetData) -> Html {
+fn intro(asset: &AccessoriesAssetData) -> Html {
     let burned = asset.common_asset_data.burned.clone();
+    let illuvitar = asset.illuvitar.clone();
+    let illuvitar_html = if illuvitar.is_some() {
+        let illuvitar = illuvitar.unwrap();
+        html!(
+           <p class="text-white fs-4 mb-2">
+                {"Bound to "}
+                <Link<Route> to={Route::Asset {token_address: illuvitar.token_address.clone(),
+                                                token_id: illuvitar.token_id}} classes="btn btn-primary me-1 mb-1">
+                    { illuvitar.name.clone() }
+                </Link<Route>>
+            </p>
+        )
+    } else {
+        html!()
+    };
 
     html!(
         <div class="container-fluid p-5 bg-gray">
@@ -45,19 +60,17 @@ fn intro(asset: &D1skAssetData) -> Html {
                           }
                         </div>
                       </div>
-                      <p class="text-white fs-4 mb-2">{format!("Alpha {}", if {asset.alpha} { "Yes" } else {"No"})}</p>
-                      <p class="text-white fs-4 mb-2">{format!("Set {}", asset.set.clone())}</p>
-                      <p class="text-white fs-4 mb-2">{format!("Wave {}", asset.wave.clone())}</p>
+                      <p class="text-white fs-5 mt-0">{format!("x{}% boost", asset.multiplier)}</p>
+                      <p class="text-white fs-4 mb-2">{format!("Tier {}", asset.tier.clone())}</p>
+                      <p class="text-white fs-4 mb-2">{format!("Stage {}", asset.stage.clone())}</p>
+                      <p class="text-white fs-4 mb-2">{format!("Slot {}", asset.slot.clone())}</p>
+                      <p class="text-white fs-4 mb-2"> {"Origin "}
+                      <Link<Route> to={Route::Asset {token_address: asset.source_token_address.clone(), token_id: asset.source_disk_id}} classes="btn btn-primary me-1 mb-1">
+                          { asset.source_disk_type.clone() }
+                      </Link<Route>>
+                      </p>
                       if {burned} {
-                          <div>
-                            <p class="text-white fs-4 mb-2">{"Content"}</p>
-                              { asset.content.iter().map(|content|
-                              html!(
-                                  <Link<Route> to={Route::Asset {token_address: content.token_address.clone(), token_id: content.token_id}} classes="btn btn-primary me-1 mb-1">
-                                      { content.name.clone() }
-                                  </Link<Route>>
-                              )).collect::<Html>() }
-                          </div>
+                        { illuvitar_html }
                       } else {
                         <p class="text-white fs-4 mb-2">
                             {"Owned by "}

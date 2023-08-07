@@ -28,10 +28,10 @@ pub async fn refresh_mat_views(pool: &Pool<Postgres>) {
     let mat_views = vec![
         "asset_current_owner_mat_view",
         "trade_volume_mat_view",
-        "cheapest_and_most_expensive_trades_by_attribute_mat_view",
         "trade_volume_full_mat_view",
-        "total_minted_and_burnt_mat_view",
-        "floor_data_mat_view",
+        "cheapest_and_most_expensive_trades_by_attribute_mat_view",
+        "floor_data_mat_by_attribute_view",
+        "total_minted_and_burnt_by_attribute_mat_view",
     ];
     for view in mat_views {
         match sqlx::query(&format!("refresh materialized view {}", view))

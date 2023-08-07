@@ -49,7 +49,7 @@ async fn fetch_floor_data_by_attribute(
     token_address: &String,
 ) -> BTreeMap<String, Vec<VitalsDataFloor>> {
     return match query_as::<_, FloorDataDb>(
-        "select name, attribute, token_id, buy_price, buy_currency from floor_data_mat_view where token_address=$1")
+        "select name, attribute, token_id, buy_price, buy_currency from floor_data_mat_by_attribute_view where token_address=$1")
         .bind(token_address)
         .fetch_all(pool).await {
         Ok(result) => {
@@ -122,7 +122,7 @@ async fn fetch_minted_burnt_by_attribute(
     token_address: &String,
 ) -> BTreeMap<String, Vec<TotalMintedBurnt>> {
     return match query_as::<_, TotalMintedBurntDb>(
-        "select attribute, total_minted, total_burnt from total_minted_and_burnt_mat_view where token_address=$1")
+        "select attribute, total_minted, total_burnt from total_minted_and_burnt_by_attribute_mat_view where token_address=$1")
         .bind(token_address)
         .fetch_all(pool).await {
         Ok(result) => {

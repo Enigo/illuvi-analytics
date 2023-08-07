@@ -18,3 +18,4 @@ wasm-bindgen-futures = "0.4.36"
 serde = { version = "1.0.163", features = ["derive"] }
 chrono = { version = "0.4.24", features = ["serde"] }
 dotenvy_macro = "0.15.7"
+web-sys = { version = "0.3.63", features = ["Window", "ScrollToOptions", "ScrollBehavior"] }

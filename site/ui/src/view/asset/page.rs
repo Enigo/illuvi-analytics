@@ -1,6 +1,8 @@
-use crate::utils::api_utils;
+use crate::utils::{api_utils, navigation_utils};
 use crate::view::asset::events::AssetEvents;
-use crate::view::asset::{d1sk::AssetD1sk, land::AssetLand};
+use crate::view::asset::{
+    accessories::AssetAccessories, d1sk::AssetD1sk, illuvitar::AssetIlluvitar, land::AssetLand,
+};
 use log::error;
 use model::model::asset::AssetData;
 use yew::prelude::*;
@@ -20,6 +22,7 @@ pub fn asset_function_component(props: &Props) -> Html {
         let asset = asset.clone();
         use_effect_with_deps(
             move |_| {
+                navigation_utils::scroll_to_top();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<AssetData>(
                         format!(
@@ -39,7 +42,7 @@ pub fn asset_function_component(props: &Props) -> Html {
                     }
                 });
             },
-            (),
+            (props.token_id.clone(), props.token_address.clone()),
         );
     }
 
@@ -50,6 +53,12 @@ pub fn asset_function_component(props: &Props) -> Html {
                 asset_html = html! {<AssetLand land={asset.land.clone().unwrap()} />};
             } else if asset.d1sk.is_some() {
                 asset_html = html! {<AssetD1sk d1sk={asset.d1sk.clone().unwrap()} />};
+            } else if asset.accessories.is_some() {
+                asset_html =
+                    html! {<AssetAccessories accessories={asset.accessories.clone().unwrap()} />};
+            } else if asset.illuvitar.is_some() {
+                asset_html =
+                    html! {<AssetIlluvitar illuvitar={asset.illuvitar.clone().unwrap()} />};
             }
 
             html! {

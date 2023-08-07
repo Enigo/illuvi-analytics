@@ -37,7 +37,7 @@ pub fn asset_events_function_component(props: &Props) -> Html {
                     }
                 });
             },
-            (),
+            (props.token_id.clone(), props.token_address.clone()),
         );
     }
 
@@ -66,19 +66,22 @@ pub fn asset_events_function_component(props: &Props) -> Html {
                                             <tr key={transaction.updated_on.to_string()}>
                                                 if {transaction.id == Option::None} {
                                                     <td scope="row" class="align-middle">
-                                                        <span class="d-block mb-1">{transaction.event.clone()}</span>
+                                                        <span class="d-block mb-1">{ transaction.event.clone() }</span>
                                                         <span class="d-block text-muted"> { formatting_utils::format_date(transaction.updated_on) }</span>
                                                     </td>
                                                 } else {
                                                     <td scope="row" class="align-middle">
-                                                        <span class="d-block mb-1">{formatting_utils::format_transaction_link(transaction.id.unwrap(), transaction.event.clone())}</span>
+                                                        <span class="d-block mb-1">{ formatting_utils::format_transaction_link(transaction.id.unwrap(), transaction.event.clone()) }</span>
                                                         <span class="d-block text-muted"> { formatting_utils::format_date(transaction.updated_on) }</span>
                                                     </td>
                                                 }
-                                                <td class="align-middle">{formatting_utils::format_wallet_link(&transaction.wallet_from)}</td>
-                                                <td class="align-middle">{formatting_utils::format_wallet_link(&transaction.wallet_to)}</td>
+                                                <td class="align-middle">{ formatting_utils::format_wallet_link(&transaction.wallet_from) }</td>
+                                                <td class="align-middle">{ formatting_utils::format_wallet_link(&transaction.wallet_to) }</td>
                                                 if let Some(price) = &transaction.price {
-                                                    <td class="align-middle">{ formatting_utils::format_price(&price) }</td>
+                                                    <td scope="row" class="align-middle">
+                                                        <span class="d-block mb-1">{ formatting_utils::format_price(&price) }</span>
+                                                        <span class="d-block text-muted"> { formatting_utils::format_price(&transaction.usd_price.clone().unwrap()) }</span>
+                                                    </td>
                                                 } else {
                                                     <td></td>
                                                 }

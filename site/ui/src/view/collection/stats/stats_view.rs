@@ -1,5 +1,5 @@
 use crate::utils::formatting_utils::format_number_with_spaces;
-use crate::utils::{api_utils, formatting_utils};
+use crate::utils::{api_utils, formatting_utils, navigation_utils};
 use crate::view::collection::common::{no_data::NoData, trade_card::TradeCardWithFlip};
 use crate::view::collection::stats::trade_volume_card::TradeVolumeCardWithFlip;
 use log::error;
@@ -21,6 +21,7 @@ pub fn stats_view_function_component(props: &Props) -> Html {
         let stats = stats.clone();
         use_effect_with_deps(
             move |_| {
+                navigation_utils::scroll_to_top();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<StatsData>(
                         format!("/stat/stats?token_address={}", token_address).as_str(),

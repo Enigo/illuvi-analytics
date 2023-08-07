@@ -1,7 +1,15 @@
+use crate::utils::navigation_utils;
 use yew::prelude::*;
 
 #[function_component(About)]
 pub fn about_function_component() -> Html {
+    use_effect_with_deps(
+        |_| {
+            navigation_utils::scroll_to_top();
+        },
+        (),
+    );
+
     return html! {
         <section>
             <div class="container mt-1 p-4 bg-dark">
@@ -40,7 +48,6 @@ pub fn about_function_component() -> Html {
                         <div class="col-md-5">
                             <ul class="list-group">
                               <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Fetching deposits and withdrawals data"}</p></li>
-                              <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Loading data for all Illuvium projects"}</p></li>
                               <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Adding new page for Illuvium Universe monetary data"}</p></li>
                               <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Adding new page for wallet stats"}</p></li>
                               <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Introducing 'find similar assets' functionality"}</p></li>

@@ -23,15 +23,9 @@ pub async fn get_all_mints_for_token_address(
         "select m.token_id, m.token_address, a.name, a.metadata->>'image_url' as image_url from mint m
                                                     join asset a on m.token_id = a.token_id and m.token_address = a.token_address
                                            where m.token_address=$1
-            ORDER BY
-                CASE
-                    WHEN m.token_address = '0x9e0d99b864e1ac12565125c5a82b59adea5a09cd' THEN a.metadata->>'tier'
-                    END desc,
-                CASE
-                    WHEN m.token_address = '0xc1f1da534e227489d617cd742481fd5a23f6a003' THEN a.updated_on
-                    END desc, m.token_id
-        limit 50
-        offset $2",
+                                           order by a.updated_on
+                                           limit 50
+                                           offset $2",
     )
     .bind(token_address)
     .bind((page - 1) * 50)

@@ -638,6 +638,7 @@ dependencies = [
  "serde",
  "wasm-bindgen-futures",
  "wasm-logger",
+ "web-sys",
  "yew",
  "yew-router",
 ]

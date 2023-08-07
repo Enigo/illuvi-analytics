@@ -34,6 +34,10 @@ body {
     height: 250px;
 }
 
+.grayscale {
+    filter: grayscale(100%);
+}
+
 @media (max-width: 576px) {
     .img-responsive {
         width: 110px;

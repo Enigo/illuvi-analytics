@@ -135,8 +135,7 @@ pub async fn update_d1sk_price(pool: &Pool<Postgres>) {
         currency='ETH'
     FROM asset
     WHERE mint.token_id = asset.token_id and mint.token_address = asset.token_address
-      and (mint.price is null or mint.currency is null) and asset.metadata != '{}'
-    and mint.token_address = '0xc1f1da534e227489d617cd742481fd5a23f6a003'")
+      and (mint.price is null or mint.currency is null) and mint.token_address = '0xc1f1da534e227489d617cd742481fd5a23f6a003'")
         .execute(pool)
         .await
     {
@@ -144,7 +143,7 @@ pub async fn update_d1sk_price(pool: &Pool<Postgres>) {
             info!("Updated {} d1sk prices", res.rows_affected())
         }
         Err(e) => {
-            error!("Error d1sk price: {e}");
+            error!("Error updating d1sk price: {e}");
         }
     }
 }
