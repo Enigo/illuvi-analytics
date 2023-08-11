@@ -323,6 +323,14 @@ pub async fn get_events_for_token_address_and_token_id(
         get_all_mint_data_for_token_address_and_token_id(pool, token_address, token_id).await;
     events.extend(mints);
 
+    let deposits =
+        get_all_deposit_data_for_token_address_and_token_id(pool, token_address, token_id).await;
+    events.extend(deposits);
+
+    let withdrawals =
+        get_all_withdrawal_data_for_token_address_and_token_id(pool, token_address, token_id).await;
+    events.extend(withdrawals);
+
     events.sort_by(|a, b| b.updated_on.cmp(&a.updated_on));
 
     Some(events)
@@ -383,6 +391,46 @@ async fn get_all_mint_data_for_token_address_and_token_id(
         "select m.transaction_id, m.wallet, m.currency, m.price, m.minted_on, round((m.price * ch.usd), 2) as usd_price from mint m
          join coin_history ch on ch.datestamp = m.minted_on::date and (m.currency is null OR ch.symbol = m.currency)
          where token_address=$1 and token_id=$2 limit 1") // limit 1 for the case when currency is null
+        .bind(token_address)
+        .bind(token_id)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => result.into_iter().map(|mint| mint.into()).collect(),
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            vec![]
+        }
+    };
+}
+
+async fn get_all_deposit_data_for_token_address_and_token_id(
+    pool: &PgPool,
+    token_address: &String,
+    token_id: &i32,
+) -> Vec<TransactionData> {
+    return match query_as::<_, DepositDataDb>(
+        "select transaction_id, wallet, created_on from deposit where token_address=$1 and token_id=$2")
+        .bind(token_address)
+        .bind(token_id)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => result.into_iter().map(|mint| mint.into()).collect(),
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            vec![]
+        }
+    };
+}
+
+async fn get_all_withdrawal_data_for_token_address_and_token_id(
+    pool: &PgPool,
+    token_address: &String,
+    token_id: &i32,
+) -> Vec<TransactionData> {
+    return match query_as::<_, WithdrawalDataDb>(
+        "select transaction_id, wallet, created_on from withdrawal where token_address=$1 and token_id=$2")
         .bind(token_address)
         .bind(token_id)
         .fetch_all(pool)
@@ -566,6 +614,48 @@ impl From<MintDataDb> for TransactionData {
             updated_on: mint_data_db.minted_on,
             price,
             usd_price,
+        }
+    }
+}
+
+#[derive(FromRow)]
+struct DepositDataDb {
+    transaction_id: i32,
+    wallet: String,
+    created_on: NaiveDateTime,
+}
+
+impl From<DepositDataDb> for TransactionData {
+    fn from(data: DepositDataDb) -> Self {
+        Self {
+            id: Some(data.transaction_id),
+            wallet_from: "".to_string(),
+            wallet_to: data.wallet,
+            event: "Deposit".to_string(),
+            updated_on: data.created_on,
+            price: None,
+            usd_price: None,
+        }
+    }
+}
+
+#[derive(FromRow)]
+struct WithdrawalDataDb {
+    transaction_id: i32,
+    wallet: String,
+    created_on: NaiveDateTime,
+}
+
+impl From<WithdrawalDataDb> for TransactionData {
+    fn from(data: WithdrawalDataDb) -> Self {
+        Self {
+            id: Some(data.transaction_id),
+            wallet_from: data.wallet,
+            wallet_to: "".to_string(),
+            event: "Withdrawal".to_string(),
+            updated_on: data.created_on,
+            price: None,
+            usd_price: None,
         }
     }
 }

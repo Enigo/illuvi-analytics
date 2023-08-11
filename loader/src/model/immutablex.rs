@@ -1,7 +1,10 @@
 pub mod asset;
 pub mod collection;
+pub mod deposit;
 pub mod mint;
 pub mod order;
 pub mod shared;
+mod token;
 pub mod trade;
 pub mod transfer;
+pub mod withdrawal;

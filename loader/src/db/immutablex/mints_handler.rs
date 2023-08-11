@@ -12,7 +12,7 @@ impl Persistable<Mint> for MintSaver {
     async fn create_one(&self, mint: &Mint, pool: &Pool<Postgres>) {
         let mint_result = &mint.result;
         let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
-            "insert into mint (transaction_id, status, wallet, token_type, token_id, token_address, minted_on) ",
+            "insert into mint (transaction_id, status, wallet, token_id, token_address, minted_on) ",
         );
 
         query_builder.push_values(mint_result, |mut builder, res| {
@@ -21,7 +21,6 @@ impl Persistable<Mint> for MintSaver {
                 .push_bind(res.transaction_id)
                 .push_bind(res.status.clone())
                 .push_bind(res.wallet.clone())
-                .push_bind(res.token.the_type.clone())
                 .push_bind(token_data.token_id.parse::<i32>().unwrap())
                 .push_bind(token_data.token_address.clone())
                 .push_bind(DateTime::parse_from_rfc3339(&res.minted_on).unwrap());

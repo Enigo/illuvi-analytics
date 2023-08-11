@@ -47,7 +47,6 @@ pub fn about_function_component() -> Html {
                         <p class="text-white fs-4">{"Here's a glimpse of what's to come:"}</p>
                         <div class="col-md-5">
                             <ul class="list-group">
-                              <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Fetching deposits and withdrawals data"}</p></li>
                               <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Adding new page for Illuvium Universe monetary data"}</p></li>
                               <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Adding new page for wallet stats"}</p></li>
                               <li class="list-group-item bg-pink"><p class="text-white fs-5 m-1">{"Introducing 'find similar assets' functionality"}</p></li>

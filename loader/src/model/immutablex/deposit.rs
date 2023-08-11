@@ -3,12 +3,12 @@ use crate::model::immutablex::token::Token;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
-pub struct Mint {
+pub struct Deposit {
     pub result: Vec<TheResult>,
     pub cursor: String,
 }
 
-impl PaginatedApi for Mint {
+impl PaginatedApi for Deposit {
     fn get_cursor(&self) -> String {
         self.cursor.clone()
     }
@@ -20,11 +20,10 @@ impl PaginatedApi for Mint {
 
 #[derive(Deserialize, Debug)]
 pub struct TheResult {
-    #[serde(rename = "timestamp")]
-    pub minted_on: String,
     pub transaction_id: i32,
     pub status: String,
     #[serde(rename = "user")]
     pub wallet: String,
+    pub timestamp: String,
     pub token: Token,
 }

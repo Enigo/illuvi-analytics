@@ -1,7 +1,8 @@
 use crate::api_reader::coingecko::coins_reader;
 use crate::api_reader::etherscan::transactions_reader;
 use crate::api_reader::immutablex::{
-    assets_reader, collection_reader, enricher, mints_reader, orders_reader, transfers_reader,
+    assets_reader, collection_reader, deposits_reader, enricher, mints_reader, orders_reader,
+    transfers_reader, withdrawals_reader,
 };
 use crate::db::db_handler;
 use log::info;
@@ -27,6 +28,8 @@ async fn read_immutablex(pool: &Pool<Postgres>) {
         assets_reader::read_assets(&collection, pool).await;
         orders_reader::read_orders(&collection, pool).await;
         transfers_reader::read_transfers(&collection, pool).await;
+        deposits_reader::read_deposits(&collection, pool).await;
+        withdrawals_reader::read_withdrawals(&collection, pool).await;
         info!("Done with {collection}");
     }
     enricher::enrich(pool).await;

@@ -1,4 +1,5 @@
 use crate::model::immutablex::shared::PaginatedApi;
+use crate::model::immutablex::token::Token;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
@@ -27,15 +28,4 @@ pub struct TheResult {
     pub wallet_to: String,
     pub timestamp: String,
     pub token: Token,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Token {
-    pub data: TokenData,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct TokenData {
-    pub token_id: String,
-    pub token_address: String,
 }
