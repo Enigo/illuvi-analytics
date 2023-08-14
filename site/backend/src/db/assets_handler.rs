@@ -21,7 +21,7 @@ pub async fn get_asset_for_token_address_and_token_id(
     token_id: &i32,
 ) -> Option<AssetData> {
     let common_asset_data = match query_as::<_, CommonAssetDb>(
-        "select token_id, token_address, current_owner, name, metadata->>'image_url' as image_url
+        "select token_id, token_address, current_owner, metadata->>'name' as name, metadata->>'image_url' as image_url
          from asset where token_address=$1 and token_id=$2",
     )
     .bind(token_address)
@@ -77,7 +77,7 @@ async fn get_d1sk_asset(
     common_asset_data: CommonAssetData,
 ) -> Option<AssetData> {
     let content = match query_as::<_, AssetContentDb>(
-        "select token_id, token_address, name from asset where (metadata ->> 'Source Disk Id')::int4 = $1
+        "select token_id, token_address, metadata->>'name' as name from asset where (metadata ->> 'Source Disk Id')::int4 = $1
             and metadata ->> 'Base Illuvitar Token Id' is null order by token_address, name")
         .bind(token_id)
         .fetch_all(pool)
@@ -132,7 +132,7 @@ async fn get_accessories_asset(
             FROM asset
             where (metadata ->> 'Slot') is not null and token_id=$1
         )
-        SELECT iluv.token_id, iluv.token_address, iluv.name
+        SELECT iluv.token_id, iluv.token_address, iluv.metadata->>'name' as name
         FROM asset iluv
                  JOIN acc_data acc ON acc.token_id = (iluv.metadata ->> (acc.slot || ' Token Id'))::int4")
         .bind(token_id)

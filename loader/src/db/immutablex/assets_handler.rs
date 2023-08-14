@@ -12,15 +12,15 @@ pub struct AssetSaver;
 impl Persistable<Asset> for AssetSaver {
     async fn create_one(&self, asset: &Asset, pool: &Pool<Postgres>) {
         let asset_result = &asset.result;
+        // attribute column is set by Postgres function
         let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
-            "insert into asset (token_id, token_address, name, metadata, current_owner, created_on, updated_on) ",
+            "insert into asset (token_id, token_address, metadata, current_owner, created_on, updated_on) ",
         );
 
         query_builder.push_values(asset_result, |mut builder, res| {
             builder
                 .push_bind(res.token_id.parse::<i32>().unwrap())
                 .push_bind(&res.token_address)
-                .push_bind(&res.name)
                 .push_bind(Json(&res.metadata))
                 .push_bind(&res.current_owner)
                 .push_bind(DateTime::parse_from_rfc3339(&res.created_at).unwrap())

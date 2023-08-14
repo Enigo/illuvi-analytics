@@ -7,13 +7,19 @@ use std::collections::BTreeMap;
 pub struct VitalsData {
     pub total_assets: i64,
     pub unique_holders: i64,
-    pub floor_by_attribute: BTreeMap<String, Vec<VitalsDataFloor>>,
     pub trades_volume: Vec<Price>,
     pub last_trades: Vec<SingleTrade>,
-    pub minted_burnt_by_attribute: BTreeMap<String, Vec<TotalMintedBurnt>>,
+    pub data_by_attribute: BTreeMap<String, AttributeData>,
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct AttributeData {
+    pub floor: Vec<VitalsDataFloor>,
+    pub minted_burnt: TotalMintedBurnt,
+    pub active_orders: i64,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct VitalsDataFloor {
     pub token_id: i32,
     pub name: String,

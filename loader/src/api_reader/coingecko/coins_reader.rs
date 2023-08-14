@@ -22,7 +22,7 @@ pub async fn read_coins(pool: &Pool<Postgres>) {
 }
 
 async fn fetch_coins(pool: &Pool<Postgres>) {
-    match coins_handler::get_all_missing_symbols_for_filled_orders(&pool).await {
+    match coins_handler::get_all_missing_symbols_for_filled_or_active_orders(&pool).await {
         Some(missing_symbols) => {
             if !missing_symbols.is_empty() {
                 info!("Fetching ids for {:?}", missing_symbols);
@@ -37,6 +37,7 @@ async fn fetch_coins(pool: &Pool<Postgres>) {
                             "force-bridge-usdc",
                             "usd-coin-avalanche-bridged-usdc-e",
                             "ethereum-wormhole",
+                            "apemove",
                         ];
                         for coin in coins {
                             if missing_symbols.contains(&coin.symbol.to_uppercase())

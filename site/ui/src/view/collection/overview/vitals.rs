@@ -2,7 +2,7 @@ use crate::utils::{api_utils, formatting_utils};
 use crate::view::collection::common::{no_data::NoData, trade_card::TradeCardWithFlip};
 use log::error;
 use model::model::price::Price;
-use model::model::vitals::{TotalMintedBurnt, VitalsData, VitalsDataFloor};
+use model::model::vitals::{AttributeData, VitalsData, VitalsDataFloor};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -56,22 +56,20 @@ pub fn collection_mint_function_component(props: &Props) -> Html {
 }
 
 fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
-    if vitals_data.floor_by_attribute.is_empty() {
+    if vitals_data.data_by_attribute.is_empty() {
         return html!( <NoData /> );
     }
 
-    let attribute_data_html = vitals_data.floor_by_attribute.iter().map(|(attribute, data_floors)|
+    let attribute_data_html = vitals_data.data_by_attribute.iter().map(|(attribute, attribute_data)|
         html!(
-            <div class="row text-center my-3 pb-3 justify-content-center animate__animated animate__fadeIn animate__fast animate__delay-0.25s">
+            <div class="row text-center my-3 pb-3 justify-content-center animate__animated animate__fadeIn animate__faster animate__delay-0.25s">
                 <p class="text-white fs-3">{attribute}</p>
                 <div class="row rounded border justify-content-center p-3">
-                    <p class="text-white fs-4">{ "Floors" }</p>
-                    { data_floors.iter().map(|data_floor|get_single_floor_card(data_floor, token_address)).collect::<Html>()}
-                    <p class="text-white fs-4 pt-3">{ "Minted | Burnt" }</p>
-                    { vitals_data.minted_burnt_by_attribute.get(attribute)
-                        .unwrap()
-                        .into_iter()
-                        .map(|data|get_single_minted_burnt_card(data)).collect::<Html>()}
+                    {
+                        get_single_attribute_card(attribute_data)
+                    }
+                    <p class="text-white fs-4 pt-3">{ "Floors" }</p>
+                    { attribute_data.floor.iter().map(|data_floor|get_single_floor_card(data_floor, token_address)).collect::<Html>()}
                 </div>
             </div>
         )
@@ -79,7 +77,7 @@ fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
 
     let last_trades = &vitals_data.last_trades;
     let last_trades_html = html! {
-        <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast animate__delay-0.25s">
+        <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__faster animate__delay-0.25s">
             <p class="text-white fs-3 mb-2">{format!("Last {} trades", last_trades.len())}</p>
              <div class="row text-center mb-5">
                 { last_trades.iter().map(|trade| {
@@ -95,7 +93,7 @@ fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
     return html! {
         <div class="container-fluid p-5 bg-gray">
             <div class="container">
-                <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast animate__delay-0.25s">
+                <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__faster animate__delay-0.25s">
                     { formatting_utils::get_single_card(&String::from("Assets"), &String::from("minted"), &format_number_with_spaces(&vitals_data.total_assets)) }
                     { formatting_utils::get_single_card(&String::from("Unique holders"), &String::from("wallets"), &format_number_with_spaces(&vitals_data.unique_holders)) }
                     { html! { <CardWithOnClick {trades_volume} /> } }
@@ -123,18 +121,28 @@ fn get_single_floor_card(data_floor: &VitalsDataFloor, token_address: &String) -
     )
 }
 
-fn get_single_minted_burnt_card(data: &TotalMintedBurnt) -> Html {
+fn get_single_attribute_card(data: &AttributeData) -> Html {
+    let minted_burnt = &data.minted_burnt;
+    let listed_rate = data.active_orders.clone() as f64
+        / (minted_burnt.total_minted.clone() - minted_burnt.total_burnt.clone()) as f64
+        * 100.0;
+    let burn_rate =
+        minted_burnt.total_burnt.clone() as f64 / minted_burnt.total_minted.clone() as f64 * 100.0;
     html!(
       <div class="col-md-4 mb-2">
         <div class="card">
           <div class="card-body bg-pink text-white">
              <ul class="list-group list-group-flush">
                 <li class="list-group-item bg-pink text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                    <span class="badge bg-primary">{"Minted"}</span>{ format_number_with_spaces(&data.total_minted) }</li>
+                    <span class="badge bg-primary">{"Listed"}</span>{ format_number_with_spaces(&data.active_orders) }</li>
                 <li class="list-group-item bg-pink text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                    <span class="badge bg-primary">{"Burnt"}</span> { format_number_with_spaces(&data.total_burnt) }</li>
+                    <span class="badge bg-primary">{"Listed Rate"}</span>{ format!("{:.2}%", listed_rate) }</li>
                 <li class="list-group-item bg-pink text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                    <span class="badge bg-primary">{"Burn Rate"}</span>{ format!("{}%", (data.total_burnt as f64 / data.total_minted as f64 * 100.0).round() as i64) }</li>
+                    <span class="badge bg-primary">{"Minted"}</span>{ format_number_with_spaces(&minted_burnt.total_minted) }</li>
+                <li class="list-group-item bg-pink text-white fs-5 d-flex justify-content-between align-items-center w-100">
+                    <span class="badge bg-primary">{"Burnt"}</span> { format_number_with_spaces(&minted_burnt.total_burnt) }</li>
+                <li class="list-group-item bg-pink text-white fs-5 d-flex justify-content-between align-items-center w-100">
+                    <span class="badge bg-primary">{"Burn Rate"}</span>{ format!("{:.2}%", burn_rate) }</li>
             </ul>
           </div>
         </div>

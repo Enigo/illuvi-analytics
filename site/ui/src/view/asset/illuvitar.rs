@@ -25,7 +25,7 @@ fn intro(asset: &IlluvitarAssetData) -> Html {
     let burned = asset.common_asset_data.burned.clone();
     html!(
         <div class="container-fluid p-5 bg-gray">
-            <div class="container animate__animated animate__fadeIn animate__fast">
+            <div class="container animate__animated animate__fadeIn animate__faster">
                 <div class="row g-0">
                   <div class="col-lg-5 order-lg-1 d-flex align-items-center justify-content-center text-center">
                     <img src={asset.common_asset_data.image_url.clone()}

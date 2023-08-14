@@ -90,13 +90,13 @@ fn statistics(stats_data: &StatsData, token_address: &String) -> Html {
 fn render_totals(total: &StatsDataTotal) -> Html {
     return html! {
         <>
-        <div class="row p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast">
+        <div class="row p-3 text-center justify-content-center animate__animated animate__fadeIn animate__faster">
             <p class="text-white fs-2 mb-2">{"Totals"}</p>
             { formatting_utils::get_single_card(&String::from("Minted"), &String::from("assets"), &format_number_with_spaces(&total.assets_minted)) }
             { formatting_utils::get_single_card(&String::from("Burnt"), &String::from("assets"), &format_number_with_spaces(&total.assets_burnt)) }
             { formatting_utils::get_single_card(&String::from("Burn Rate"), &String::from("%"), &((total.assets_burnt as f64 / total.assets_minted as f64 * 100.0).round() as i64).to_string()) }
         </div>
-        <div class="row row-cols-1 row-cols-md-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast">
+        <div class="row row-cols-1 row-cols-md-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__faster">
             { formatting_utils::get_single_card(&String::from("Transfers"), &String::from("made"), &format_number_with_spaces(&total.transfers)) }
             { formatting_utils::get_single_card(&String::from("Trades"), &String::from("active | cancelled | filled"), &format_number_with_spaces(&total.trades)) }
         </div>
@@ -106,7 +106,7 @@ fn render_totals(total: &StatsDataTotal) -> Html {
 
 fn render_most(stats_data: &StatsData, token_address: &String) -> Html {
     return html! {
-        <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast">
+        <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__faster">
             if !&stats_data.most_transferred_token.is_empty() {
                 { html!(get_single_most_token_card(String::from("Most Transferred Token"), token_address, &stats_data.most_transferred_token)) }
             }
@@ -123,7 +123,7 @@ fn render_most(stats_data: &StatsData, token_address: &String) -> Html {
 fn render_trades_volume(stats_data: &StatsData) -> Html {
     let trades_volume = &stats_data.trades_volume;
     return html!(
-        <div class="row text-center animate__animated animate__fadeIn animate__fast">
+        <div class="row text-center animate__animated animate__fadeIn animate__faster">
             <p class="text-white fs-2 mb-0">{"Trades"}</p>
             <p class="text-white fs-3 mb-2">{"Volume"}</p>
             <p class="text-white fs-5 mb-0">{"There are various cryptocurrencies that can be used to purchase the assets"}</p>
@@ -143,7 +143,7 @@ fn render_trades_volume(stats_data: &StatsData) -> Html {
 fn render_trades_amount_html(stats_data: &StatsData) -> Html {
     let trades_by_status = &stats_data.trades_by_status;
     return html!(
-        <div class="row text-center mb-5 animate__animated animate__fadeIn animate__fast">
+        <div class="row text-center mb-5 animate__animated animate__fadeIn animate__faster">
             <p class="text-white text-center fs-3 mb-2">{"Amount"}</p>
             { trades_by_status.iter().map(|(status, trades)| {
                 let mut total_per_status = 0;
@@ -174,7 +174,7 @@ fn render_cheapest_and_most_expensive_trades(
 ) -> Html {
     let trades_by_attribute = &stats_data.cheapest_and_most_expensive_trades_by_attribute;
     return html! {
-        <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__fast">
+        <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__faster">
             <p class="text-white fs-3 mb-2">{"Cheapest | Most Expensive Trades"}</p>
             { trades_by_attribute.iter().map(|(attribute, trades)| {
                 html! {

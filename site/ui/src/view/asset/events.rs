@@ -43,7 +43,7 @@ pub fn asset_events_function_component(props: &Props) -> Html {
 
     html!(
         <div class="container-fluid p-3 bg-dark">
-            <div class="container animate__animated animate__fadeIn animate__fast">
+            <div class="container animate__animated animate__fadeIn animate__faster">
                 <div class="row">
                     <div class="col-md-12">
                         <p class="text-white text-center fs-2 mb-4">{"Events"}</p>

@@ -19,7 +19,7 @@ pub async fn create_one(coin: &Coin, pool: &Pool<Postgres>) {
     }
 }
 
-pub async fn get_all_missing_symbols_for_filled_orders(
+pub async fn get_all_missing_symbols_for_filled_or_active_orders(
     pool: &Pool<Postgres>,
 ) -> Option<Vec<String>> {
     return match query_scalar(
@@ -29,7 +29,7 @@ pub async fn get_all_missing_symbols_for_filled_orders(
                                        select
                                        from coin c
                                        where c.symbol = od.buy_currency)
-                                 and od.status = 'filled';",
+                                 and od.status in ('filled', 'active')",
     )
     .fetch_all(pool)
     .await

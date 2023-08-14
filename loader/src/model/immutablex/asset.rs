@@ -22,7 +22,6 @@ impl PaginatedApi for Asset {
 pub struct TheResult {
     pub token_id: String,
     pub token_address: String,
-    pub name: String,
     pub metadata: HashMap<String, serde_json::Value>,
     #[serde(rename = "user")]
     pub current_owner: String,

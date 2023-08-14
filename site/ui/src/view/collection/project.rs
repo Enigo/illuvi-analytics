@@ -56,7 +56,7 @@ fn project(collection: &CollectionData) -> Html {
                     <div class="col-lg-4 text-center order-lg-1">
                       <img src={collection.collection_image_url.clone()} class="img-fluid shadow-gradient" width="250" height="250" alt={collection.name.clone()}/>
                     </div>
-                    <div class="col-lg-7 order-lg-2 text-center text-lg-start animate__animated animate__fadeIn animate__fast animate__delay-0.5s">
+                    <div class="col-lg-7 order-lg-2 text-center text-lg-start animate__animated animate__fadeIn animate__faster animate__delay-0.5s">
                       <p class="text-white fs-1">{&collection.name}</p>
                       <p class="text-light fs-6 mb-0">{&collection.description}</p>
                     </div>

@@ -49,6 +49,17 @@ pub async fn get_all_missing_distinct_date_to_id_pairs(
                                                                      and ch.symbol = od.buy_currency
                                                                 )
                                                                 and od.status = 'filled'
+                                                                union
+                                                                select now()::date as dates, c.id
+                                                                from order_data od
+                                                                         join coin c on c.symbol = od.buy_currency
+                                                                where not exists (
+                                                                        select 1
+                                                                        from coin_history ch
+                                                                        where ch.datestamp = now()::date
+                                                                          and ch.symbol = od.buy_currency
+                                                                    )
+                                                                  and od.status = 'active'
                                                             ) res;")
         .fetch_all(pool)
         .await
