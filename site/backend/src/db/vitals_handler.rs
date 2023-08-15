@@ -46,25 +46,27 @@ async fn fetch_data_by_attribute(
     pool: &Pool<Postgres>,
     token_address: &String,
 ) -> BTreeMap<String, AttributeData> {
-    let floor_by_attribute = fetch_floor_data_by_attribute(pool, token_address).await;
     let minted_burnt_by_attribute = fetch_minted_burnt_by_attribute(pool, token_address).await;
+    let floor_by_attribute = fetch_floor_data_by_attribute(pool, token_address).await;
     let active_orders_by_attribute = fetch_active_orders_by_attribute(pool, token_address).await;
 
     let mut result = BTreeMap::new();
 
-    for (key, value) in floor_by_attribute {
-        let minted_burnt = minted_burnt_by_attribute.get(key.as_str()).unwrap();
+    for (key, value) in minted_burnt_by_attribute {
         result.insert(
             key.clone(),
             AttributeData {
-                floor: value,
+                floor: floor_by_attribute
+                    .get(key.as_str())
+                    .unwrap_or(&Vec::<VitalsDataFloor>::new())
+                    .clone(),
                 active_orders: active_orders_by_attribute
                     .get(key.as_str())
-                    .unwrap()
+                    .unwrap_or(&0_i64)
                     .clone(),
                 minted_burnt: TotalMintedBurnt {
-                    total_minted: minted_burnt.total_minted.clone(),
-                    total_burnt: minted_burnt.total_burnt.clone(),
+                    total_minted: value.total_minted.clone(),
+                    total_burnt: value.total_burnt.clone(),
                 },
             },
         );

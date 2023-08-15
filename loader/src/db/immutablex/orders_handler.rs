@@ -72,11 +72,13 @@ impl Persistable<Order> for OrderSaver {
 }
 
 pub async fn fetch_all_filled_token_ids_with_no_wallet_to_or_transaction_id(
+    token_address: &String,
     pool: &Pool<Postgres>,
 ) -> Option<Vec<i32>> {
     return match query_scalar(
-        "select distinct(token_id) from order_data where status = 'filled' and (wallet_to is null or transaction_id is null)"
+        "select distinct(token_id) from order_data where status = 'filled' and (wallet_to is null or transaction_id is null) and token_address=$1"
     )
+        .bind(token_address)
         .fetch_all(pool)
         .await {
         Ok(token_ids) => {

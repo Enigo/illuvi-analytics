@@ -60,8 +60,11 @@ async fn enrich_wallet_to_and_transaction_id(token_address: &String, pool: &Pool
         }
     }
 
-    match orders_handler::fetch_all_filled_token_ids_with_no_wallet_to_or_transaction_id(&pool)
-        .await
+    match orders_handler::fetch_all_filled_token_ids_with_no_wallet_to_or_transaction_id(
+        token_address,
+        &pool,
+    )
+    .await
     {
         Some(token_ids) => {
             info!(

@@ -123,9 +123,12 @@ fn get_single_floor_card(data_floor: &VitalsDataFloor, token_address: &String) -
 
 fn get_single_attribute_card(data: &AttributeData) -> Html {
     let minted_burnt = &data.minted_burnt;
-    let listed_rate = data.active_orders.clone() as f64
-        / (minted_burnt.total_minted.clone() - minted_burnt.total_burnt.clone()) as f64
-        * 100.0;
+    let available_assets = minted_burnt.total_minted.clone() - minted_burnt.total_burnt.clone();
+    let listed_rate = if available_assets == 0 {
+        0_f64
+    } else {
+        data.active_orders.clone() as f64 / available_assets as f64 * 100.0
+    };
     let burn_rate =
         minted_burnt.total_burnt.clone() as f64 / minted_burnt.total_minted.clone() as f64 * 100.0;
     html!(
