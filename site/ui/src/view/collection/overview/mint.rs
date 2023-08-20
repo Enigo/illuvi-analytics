@@ -1,4 +1,5 @@
 use crate::utils::api_utils;
+use crate::view::loading::LoadingSpinnerDark;
 use log::error;
 use model::model::mint::MintData;
 use yew::prelude::*;
@@ -13,7 +14,6 @@ pub struct Props {
     pub token_address: String,
 }
 
-// currently there is an issue that the state is not cleared after the new page\token_address is called - check SO your own question
 #[function_component(CollectionMint)]
 pub fn collection_mint_function_component(props: &Props) -> Html {
     let page = use_state(|| 1);
@@ -25,6 +25,7 @@ pub fn collection_mint_function_component(props: &Props) -> Html {
         let page_val = *page;
         use_effect_with_deps(
             move |_| {
+                mint.set(None);
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<MintData>(
                         format!(
@@ -53,7 +54,11 @@ pub fn collection_mint_function_component(props: &Props) -> Html {
                 { mints(mint, page) }
             }
         }
-        None => html! {},
+        None => {
+            html! {
+                <LoadingSpinnerDark />
+            }
+        }
     };
 }
 
@@ -81,10 +86,10 @@ pub fn mints(mint: &MintData, page: UseStateHandle<i32>) -> Html {
     if !mint.mints.is_empty() {
             <selection>
                 <div class="container-fluid p-3 bg-dark">
-                    <div class="container mt-4 animate__animated animate__fadeIn animate__faster animate__delay-1s">
+                    <div class="container mt-4 animate__animated animate__fadeIn animate__faster animate__delay-0.25s">
                         <p class="text-white text-center fs-2 mb-4">{"Explore"}</p>
-                        {mints}
                         {pagination(mint, page)}
+                        {mints}
                     </div>
                 </div>
             </selection>

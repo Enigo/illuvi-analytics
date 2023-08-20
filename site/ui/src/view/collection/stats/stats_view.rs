@@ -2,6 +2,7 @@ use crate::utils::formatting_utils::format_number_with_spaces;
 use crate::utils::{api_utils, formatting_utils, navigation_utils};
 use crate::view::collection::common::{no_data::NoData, trade_card::TradeCardWithFlip};
 use crate::view::collection::stats::trade_volume_card::TradeVolumeCardWithFlip;
+use crate::view::loading::LoadingSpinnerGray;
 use log::error;
 use model::model::stats::{
     StatsData, StatsDataMostEventForToken, StatsDataMostEventForWallet, StatsDataTotal,
@@ -21,6 +22,7 @@ pub fn stats_view_function_component(props: &Props) -> Html {
         let stats = stats.clone();
         use_effect_with_deps(
             move |_| {
+                stats.set(None);
                 navigation_utils::scroll_to_top();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<StatsData>(
@@ -46,7 +48,9 @@ pub fn stats_view_function_component(props: &Props) -> Html {
             html!({ stats_view(stats_data, &props.token_address) })
         }
         None => {
-            html! {}
+            html! {
+                <LoadingSpinnerGray />
+            }
         }
     };
 }

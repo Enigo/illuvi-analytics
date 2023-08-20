@@ -1,5 +1,6 @@
 use crate::utils::{api_utils, formatting_utils};
 use crate::view::collection::common::{no_data::NoData, trade_card::TradeCardWithFlip};
+use crate::view::loading::LoadingSpinnerGray;
 use log::error;
 use model::model::price::Price;
 use model::model::vitals::{AttributeData, VitalsData, VitalsDataFloor};
@@ -19,9 +20,10 @@ pub fn collection_mint_function_component(props: &Props) -> Html {
     let vitals = use_state(|| None);
     {
         let token_address = props.token_address.clone();
-        let stats = vitals.clone();
+        let vitals = vitals.clone();
         use_effect_with_deps(
             move |_| {
+                vitals.set(None);
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<VitalsData>(
                         format!("/stat/vitals?token_address={}", token_address).as_str(),
@@ -29,7 +31,7 @@ pub fn collection_mint_function_component(props: &Props) -> Html {
                     .await
                     {
                         Ok(fetched_data) => {
-                            stats.set(Some(fetched_data));
+                            vitals.set(Some(fetched_data));
                         }
                         Err(e) => {
                             error!("{e}")
@@ -50,7 +52,9 @@ pub fn collection_mint_function_component(props: &Props) -> Html {
             }
         }
         None => {
-            html! {}
+            html! {
+                <LoadingSpinnerGray />
+            }
         }
     };
 }
@@ -62,7 +66,7 @@ fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
 
     let attribute_data_html = vitals_data.data_by_attribute.iter().map(|(attribute, attribute_data)|
         html!(
-            <div class="row text-center my-3 pb-3 justify-content-center animate__animated animate__fadeIn animate__faster animate__delay-0.25s">
+            <div class="row text-center my-3 pb-3 justify-content-center animate__animated animate__fadeIn animate__faster">
                 <p class="text-white fs-3">{attribute}</p>
                 <div class="row rounded border justify-content-center p-3">
                     {

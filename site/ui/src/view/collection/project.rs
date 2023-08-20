@@ -1,4 +1,5 @@
 use crate::utils::{api_utils, navigation_utils};
+use crate::view::loading::LoadingSpinnerDark;
 use log::error;
 use model::model::collection::CollectionData;
 use yew::prelude::*;
@@ -16,6 +17,7 @@ pub fn collection_project_function_component(props: &Props) -> Html {
         let collection = collection.clone();
         use_effect_with_deps(
             move |_| {
+                collection.set(None);
                 navigation_utils::scroll_to_top();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<CollectionData>(
@@ -40,9 +42,7 @@ pub fn collection_project_function_component(props: &Props) -> Html {
         Some(data) => project(data),
         None => {
             html! {
-                <div class="container pt-5">
-                    <p class="text-white fs-4 mb-2">{"Loading..."}</p>
-                </div>
+                <LoadingSpinnerDark />
             }
         }
     };

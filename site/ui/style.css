@@ -91,3 +91,26 @@ body {
     animation-duration: 1s;
 }
 /*Flipping card*/
+
+/*Spinner*/
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    height: 100vh;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid #800080;
+    border-top: 6px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+/*Spinner*/

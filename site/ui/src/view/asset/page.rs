@@ -3,6 +3,7 @@ use crate::view::asset::events::AssetEvents;
 use crate::view::asset::{
     accessories::AssetAccessories, d1sk::AssetD1sk, illuvitar::AssetIlluvitar, land::AssetLand,
 };
+use crate::view::loading::LoadingSpinnerGray;
 use log::error;
 use model::model::asset::AssetData;
 use yew::prelude::*;
@@ -22,6 +23,7 @@ pub fn asset_function_component(props: &Props) -> Html {
         let asset = asset.clone();
         use_effect_with_deps(
             move |_| {
+                asset.set(None);
                 navigation_utils::scroll_to_top();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<AssetData>(
@@ -70,9 +72,7 @@ pub fn asset_function_component(props: &Props) -> Html {
         }
         None => {
             html! {
-                <div class="container pt-5">
-                    <p class="text-white fs-4 mb-2">{"Loading..."}</p>
-                </div>
+                <LoadingSpinnerGray />
             }
         }
     };
