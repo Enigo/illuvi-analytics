@@ -4,7 +4,7 @@ use crate::model::coingecko::coin::Coin;
 use crate::model::coingecko::coin_history::CoinHistory;
 use crate::utils::env_utils;
 use futures::StreamExt;
-use log::{error, info};
+use log::{info, warn};
 use sqlx::types::chrono::NaiveDate;
 use sqlx::{Pool, Postgres};
 use std::thread;
@@ -70,7 +70,7 @@ async fn fetch_coins_history(pool: &Pool<Postgres>) {
                 if coin_history.market_data.is_some() {
                     coins_history_handler::create_one(coin_history, date, pool).await;
                 } else {
-                    error!(
+                    warn!(
                         "No data for id {} and symbol {} and date {}",
                         coin_history.id, coin_history.symbol, date
                     );

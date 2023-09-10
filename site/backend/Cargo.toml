@@ -9,11 +9,11 @@ path = "src/main.rs"
 
 [dependencies]
 model = { path= "../model"}
-log = "0.4.17"
+log = "0.4.20"
 env_logger = "0.10.0"
 dotenvy = "0.15.7"
 actix-web = "4.3.1"
 actix-cors = "0.6.4"
-serde = { version = "1.0.163", features = ["derive"] }
-sqlx = { version = "0.6.3", features = [ "runtime-actix-native-tls", "postgres", "chrono", "decimal" ] }
-openssl = { version = "0.10.54", features = ["vendored"] }
+serde = { version = "1.0.185", features = ["derive"] }
+sqlx = { version = "0.7.1", features = [ "runtime-tokio-native-tls", "postgres", "chrono", "rust_decimal" ] }
+openssl = { version = "0.10.56", features = ["vendored"] }
