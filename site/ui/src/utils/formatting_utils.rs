@@ -1,5 +1,6 @@
 use crate::Route;
-use chrono::NaiveDateTime;
+use chrono::TimeZone;
+use chrono::{Local, NaiveDateTime};
 use model::model::price::Price;
 use yew::*;
 use yew_router::prelude::*;
@@ -38,7 +39,9 @@ pub fn format_number_with_spaces(n: &i64) -> String {
 }
 
 pub fn format_date(date: NaiveDateTime) -> String {
-    date.format("%Y-%m-%d %H:%M:%S").to_string()
+    Local::from_utc_datetime(&Local, &date)
+        .format("%Y-%m-%d %H:%M:%S")
+        .to_string()
 }
 
 pub fn format_price(price: &Price) -> Html {
@@ -108,47 +111,23 @@ pub fn format_wallet_link(wallet: &String) -> Html {
         return html!();
     }
 
-    let onclick = get_onclick_to_stop_link_bubbling();
-
     return html!(
-        <a href={format!("{}{}", IMMUTASCAN_WALLET, wallet)} target="_blank" {onclick} class="btn btn-primary me-1">
+        <a href={format!("{}{}", IMMUTASCAN_WALLET, wallet)} target="_blank" class="btn btn-primary me-1">
               { format_wallet(&wallet) }
         </a>);
 }
 
 pub fn format_transaction_link(transaction_id: i32, text: String) -> Html {
-    let onclick = get_onclick_to_stop_link_bubbling();
-
     html!(
-        <a href={format!("{}{}", IMMUTASCAN_TX, transaction_id)} target="_blank" {onclick} class="text-decoration-none">{ text }</a>
+        <a href={format!("{}{}", IMMUTASCAN_TX, transaction_id)} target="_blank" class="text-decoration-none">{ text }</a>
     )
 }
 
-// Otherwise the click event is going through and flipping the card
-fn get_onclick_to_stop_link_bubbling() -> Callback<MouseEvent> {
-    Callback::from(move |e: MouseEvent| {
-        e.stop_propagation();
-    })
-}
-
-pub fn get_asset_link(token_address: &String, token_id: i32) -> Html {
+pub fn get_asset_link(token_address: &String, token_id: i32, image_url: &String) -> Html {
     html! {
-        <Link<Route> to={Route::Asset {token_address: token_address.to_owned(), token_id: token_id} } classes="btn btn-primary me-1 mb-1">
-            { format!("Token {}", token_id) }
+        <Link<Route> to={Route::Asset {token_address: token_address.to_string(), token_id: token_id} } classes="img-fluid">
+            <img src={image_url.clone()} class="img-fluid shadow-gradient" width="50%"
+            loading="lazy" alt={token_id.to_string()}/>
         </Link<Route>>
     }
-}
-
-pub fn get_single_card(title: &String, subtext: &String, text: &String) -> Html {
-    html!(
-      <div class="col-md mb-2">
-        <div class="card">
-          <h5 class="card-header">{title}</h5>
-          <div class="card-body bg-pink text-white">
-            <p class="card-text fs-4 mb-0">{text}</p>
-            <p class="card-text"><small class="text-white">{subtext}</small></p>
-          </div>
-        </div>
-      </div>
-    )
 }

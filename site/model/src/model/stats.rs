@@ -8,9 +8,9 @@ pub struct StatsData {
     pub total: StatsDataTotal,
     pub trades_volume: Vec<StatsDataTradesVolume>,
     pub trades_by_status: BTreeMap<String, Vec<StatsDataTotalOrder>>,
-    pub most_transferred_token: Vec<StatsDataMostEventForToken>,
-    pub most_traded_token: Vec<StatsDataMostEventForToken>,
-    pub most_traded_wallet: Vec<StatsDataMostEventForWallet>,
+    pub most_transferred_tokens: Vec<StatsDataMostEventForToken>,
+    pub most_traded_tokens: Vec<StatsDataMostEventForToken>,
+    pub most_trading_wallets: Vec<StatsDataMostEventForWallet>,
     pub cheapest_and_most_expensive_trades_by_attribute: BTreeMap<String, Vec<SingleTrade>>,
 }
 
@@ -28,7 +28,7 @@ pub struct StatsDataTotalOrder {
     pub buy_currency: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Serialize, Deserialize)]
 pub struct StatsDataTradesVolume {
     pub total_trades: i64,
     pub total_in_buy_currency: Price,
@@ -39,6 +39,8 @@ pub struct StatsDataTradesVolume {
 pub struct StatsDataMostEventForToken {
     pub count: i64,
     pub token_id: i32,
+    pub image_url: String,
+    pub name: String,
 }
 
 #[derive(Serialize, Deserialize)]

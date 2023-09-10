@@ -17,9 +17,9 @@ pub async fn get_all_stats_for_token_address(
     let transfers = fetch_transfers(token_address, pool).await;
     let total_trades = fetch_total_trades(token_address, pool).await;
     let trades_volume = fetch_trades_volume(token_address, pool).await;
-    let most_transferred_token = fetch_most_transferred_token(token_address, pool).await;
-    let most_traded_token = fetch_most_traded_token(token_address, pool).await;
-    let most_traded_wallet = fetch_most_traded_wallet(token_address, pool).await;
+    let most_transferred_tokens = fetch_most_transferred_tokens(token_address, pool).await;
+    let most_traded_tokens = fetch_most_traded_tokens(token_address, pool).await;
+    let most_trading_wallets = fetch_most_trading_wallets(token_address, pool).await;
     let cheapest_and_most_expensive_trades_by_attribute =
         fetch_cheapest_and_most_expensive_trades_by_attribute(token_address, pool).await;
     let total_minted_and_burnt = fetch_minted_and_burnt_assets(token_address, pool).await;
@@ -33,9 +33,9 @@ pub async fn get_all_stats_for_token_address(
         },
         trades_by_status: total_trades.1,
         trades_volume,
-        most_transferred_token,
-        most_traded_token,
-        most_traded_wallet,
+        most_transferred_tokens,
+        most_traded_tokens,
+        most_trading_wallets,
         cheapest_and_most_expensive_trades_by_attribute,
     });
 }
@@ -107,19 +107,23 @@ async fn fetch_trades_volume(
     };
 }
 
-async fn fetch_most_transferred_token(
+async fn fetch_most_transferred_tokens(
     token_address: &String,
     pool: &Pool<Postgres>,
 ) -> Vec<StatsDataMostEventForToken> {
-    return match query_as::<_, (i32, i64)>(
-        "select token_id, total from (select token_id, count(*) as total from transfer where token_address=$1 group by token_id) as subquery
+    return match query_as::<_, StatsDataMostEventForTokenDb>(
+        "select token_id, total, image_url, name from (select t.token_id, count(*) as total, a.metadata->>'image_url' as image_url, a.metadata->>'name' as name
+                                                                    from transfer t join asset a on a.token_id = t.token_id and a.token_address = t.token_address
+                                                                    where t.token_address=$1 group by t.token_id, image_url, name) as subquery
             where total = (select max(total)
                 from (select count(*) as total from transfer where token_address=$1 group by token_id) as counts);")
         .bind(token_address)
         .fetch_all(pool).await {
-        Ok(result) => result.into_iter().map(|volume| StatsDataMostEventForToken {
-            token_id: volume.0,
-            count: volume.1,
+        Ok(result) => result.into_iter().map(|token| StatsDataMostEventForToken {
+            token_id: token.token_id,
+            count: token.total,
+            image_url: token.image_url,
+            name: token.name,
 
         }).collect(),
         Err(e) => {
@@ -129,20 +133,23 @@ async fn fetch_most_transferred_token(
     };
 }
 
-async fn fetch_most_traded_token(
+async fn fetch_most_traded_tokens(
     token_address: &String,
     pool: &Pool<Postgres>,
 ) -> Vec<StatsDataMostEventForToken> {
-    return match query_as::<_, (i32, i64)>(
-        "select token_id, total from (select token_id, count(*) as total from order_data
-                                                                where token_address=$1 and status='filled' group by token_id) as subquery
+    return match query_as::<_, StatsDataMostEventForTokenDb>(
+        "select token_id, total, image_url, name from (select od.token_id, count(*) as total, a.metadata->>'image_url' as image_url, a.metadata->>'name' as name
+                                                        from order_data od join asset a on a.token_id = od.token_id and a.token_address = od.token_address
+                             where od.token_address=$1 and od.status='filled' group by od.token_id, image_url, name) as subquery
                         where total = (select max(total)
                                 from (select count(*) as total from order_data where token_address=$1 and status='filled' group by token_id) as counts);")
         .bind(token_address)
         .fetch_all(pool).await {
-        Ok(result) => result.into_iter().map(|volume| StatsDataMostEventForToken {
-            token_id: volume.0,
-            count: volume.1,
+        Ok(result) => result.into_iter().map(|token| StatsDataMostEventForToken {
+            token_id: token.token_id,
+            count: token.total,
+            image_url: token.image_url,
+            name: token.name,
 
         }).collect(),
         Err(e) => {
@@ -152,21 +159,28 @@ async fn fetch_most_traded_token(
     };
 }
 
-async fn fetch_most_traded_wallet(
+async fn fetch_most_trading_wallets(
     token_address: &String,
     pool: &Pool<Postgres>,
 ) -> Vec<StatsDataMostEventForWallet> {
     return match query_as::<_, (String, i64)>(
-        "select wallet_to, total from (select wallet_to, count(*) as total from order_data
-                             where token_address=$1 and status='filled' group by wallet_to) as subquery
-               where total = (select max(total)
-               from (select count(*) as total from order_data where token_address=$1 and status='filled' group by wallet_to) as counts);")
-        .bind(token_address)
-        .fetch_all(pool).await {
-        Ok(result) => result.into_iter().map(|volume| StatsDataMostEventForWallet {
-            wallet: volume.0,
-            count: volume.1,
-        }).collect(),
+        "select wallet_to, count(*) as total from order_data
+                    where token_address=$1 and status='filled'
+                    group by wallet_to
+                    order by 2 desc
+                    limit 3",
+    )
+    .bind(token_address)
+    .fetch_all(pool)
+    .await
+    {
+        Ok(result) => result
+            .into_iter()
+            .map(|volume| StatsDataMostEventForWallet {
+                wallet: volume.0,
+                count: volume.1,
+            })
+            .collect(),
         Err(e) => {
             error!("Error fetching data: {e}");
             vec![]
@@ -179,7 +193,7 @@ async fn fetch_cheapest_and_most_expensive_trades_by_attribute(
     pool: &Pool<Postgres>,
 ) -> BTreeMap<String, Vec<SingleTrade>> {
     return match query_as::<_, SingleTradeDb>(
-        "select attribute, token_id, name, sum_usd,  buy_currency, buy_price, wallet_to, wallet_from, updated_on, transaction_id
+        "select attribute, token_id, image_url, name, sum_usd, buy_currency, buy_price, updated_on, transaction_id
             from cheapest_and_most_expensive_trades_by_attribute_mat_view
             where token_address=$1")
         .bind(token_address)
@@ -236,4 +250,12 @@ struct StatsDataTradesVolumeDb {
     total_usd: Decimal,
     total_eur: Decimal,
     total_jpy: Decimal,
+}
+
+#[derive(FromRow)]
+struct StatsDataMostEventForTokenDb {
+    total: i64,
+    token_id: i32,
+    image_url: String,
+    name: String,
 }

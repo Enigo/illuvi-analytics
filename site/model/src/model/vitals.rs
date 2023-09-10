@@ -23,7 +23,9 @@ pub struct AttributeData {
 pub struct VitalsDataFloor {
     pub token_id: i32,
     pub name: String,
+    pub image_url: String,
     pub price: Price,
+    pub usd_price: Price,
 }
 
 #[derive(Serialize, Deserialize)]
