@@ -23,6 +23,7 @@ pub async fn get_all_stats_for_token_address(
     let cheapest_and_most_expensive_trades_by_attribute =
         fetch_cheapest_and_most_expensive_trades_by_attribute(token_address, pool).await;
     let total_minted_and_burnt = fetch_minted_and_burnt_assets(token_address, pool).await;
+    let sales_in_usd = fetch_total_sales_in_usd(token_address, pool).await;
 
     return Some(StatsData {
         total: StatsDataTotal {
@@ -30,6 +31,7 @@ pub async fn get_all_stats_for_token_address(
             assets_burnt: total_minted_and_burnt.1,
             transfers,
             trades: total_trades.0,
+            sales_in_usd,
         },
         trades_by_status: total_trades.1,
         trades_volume,
@@ -231,6 +233,25 @@ async fn fetch_minted_and_burnt_assets(
             (0, 0)
         }
     };
+}
+
+async fn fetch_total_sales_in_usd(token_address: &String, pool: &Pool<Postgres>) -> Option<Price> {
+    let result: (Option<Decimal>,) = query_as(
+        "select sum_usd from trade_volume_mat_view
+            where token_address=$1",
+    )
+    .bind(token_address)
+    .fetch_one(pool)
+    .await
+    .unwrap_or_else(|e| {
+        error!("Couldn't fetch data! {e}");
+        (None,)
+    });
+
+    result.0.map(|sum_usd| Price {
+        price: f64::try_from(sum_usd).unwrap(),
+        currency: String::from("USD"),
+    })
 }
 
 #[derive(FromRow)]

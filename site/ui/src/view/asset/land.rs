@@ -1,4 +1,5 @@
 use crate::utils::formatting_utils;
+use crate::view::asset::{image::AssetImage, title::AssetTitle};
 use model::model::asset::LandAssetData;
 use yew::prelude::*;
 
@@ -20,22 +21,25 @@ pub fn asset_land_function_component(props: &Props) -> Html {
 }
 
 fn intro(asset: &LandAssetData) -> Html {
+    let name = &asset.common_asset_data.name;
+    let image_url = asset.common_asset_data.image_url.clone();
+    let burned = false;
     html!(
-        <div class="container-fluid p-5 bg-gray">
+        <div class="container-fluid p-3 bg-gray">
             <div class="container animate__animated animate__fadeIn animate__faster">
-                <div class="row g-0">
-                  <div class="col-lg-5 order-lg-1 d-flex align-items-center justify-content-center text-center">
-                    <img src={asset.common_asset_data.image_url.clone()}
-                      class="w-75 img-fluid shadow-gradient"
-                      loading="lazy" alt={asset.common_asset_data.name.clone()}/>
-                  </div>
-                  <div class="col-lg-7 d-flex align-items-center order-lg-2 text-center text-lg-start p-md-5">
-                    <div class="d-flex flex-column">
-                      <p class="text-white fs-2 my-2">{asset.common_asset_data.name.clone()}</p>
+                { html! { <AssetTitle name={name.clone()} {burned}/> } }
+                <div class="row">
+                  <div class="col-lg align-items-center justify-content-lg-start justify-content-center order-lg-2 text-center text-lg-start mt-3">
+                    { html! { <AssetImage name={name.clone()} {image_url} {burned}/> } }
+                    <div class="bg-dark p-3 rounded border border-2 border-dark my-3">
                       <p class="text-white fs-4 mb-2">{format!("Tier {}", asset.tier.clone())}</p>
                       if {asset.landmark != "None"} {
                           <p class="text-white fs-4 mb-2">{format!("Landmark {}", asset.landmark)}</p>
                       }
+                    </div>
+                  </div>
+                  <div class="col-lg align-items-center order-lg-2 text-center text-lg-start ps-lg-4">
+                    <div>
                       <p class="text-white fs-4 mb-2">
                           {"Owned by "}
                           {formatting_utils::format_wallet_link(&asset.common_asset_data.current_owner)}

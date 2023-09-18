@@ -20,6 +20,7 @@ pub struct StatsDataTotal {
     pub assets_burnt: i64,
     pub transfers: i64,
     pub trades: i64,
+    pub sales_in_usd: Option<Price>,
 }
 
 #[derive(Serialize, Deserialize)]

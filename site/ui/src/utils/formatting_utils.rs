@@ -125,7 +125,7 @@ pub fn format_transaction_link(transaction_id: i32, text: String) -> Html {
 
 pub fn get_asset_link(token_address: &String, token_id: i32, image_url: &String) -> Html {
     html! {
-        <Link<Route> to={Route::Asset {token_address: token_address.to_string(), token_id: token_id} } classes="img-fluid">
+        <Link<Route> to={Route::Asset {token_address: token_address.to_string(), token_id: token_id} }>
             <img src={image_url.clone()} class="img-fluid shadow-gradient" width="50%"
             loading="lazy" alt={token_id.to_string()}/>
         </Link<Route>>

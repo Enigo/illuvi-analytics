@@ -1,4 +1,4 @@
-use crate::utils::formatting_utils::format_number_with_spaces;
+use crate::utils::formatting_utils::{format_number_with_spaces, format_price};
 use crate::utils::{api_utils, formatting_utils, navigation_utils};
 use crate::view::collection::common::{no_data::NoData, trade_view::SingleTradeView};
 use crate::view::loading::LoadingSpinnerGray;
@@ -102,6 +102,7 @@ fn trades(stats_data: &StatsData) -> Html {
 
 fn render_totals(total: &StatsDataTotal) -> Html {
     let burn_rate = total.assets_burnt as f64 / total.assets_minted as f64 * 100.0;
+    let sales_in_usd = &total.sales_in_usd;
     return html! {
         <div class="row text-center justify-content-center">
             <p class="text-white fs-3 mb-2">{"Totals"}</p>
@@ -121,6 +122,10 @@ fn render_totals(total: &StatsDataTotal) -> Html {
                       <span class="badge bg-primary">{"Transfers"}</span>{ &format_number_with_spaces(&total.transfers) }</li>
                   <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
                       <span class="badge bg-primary">{"Trades"}</span>{ &format_number_with_spaces(&total.trades) }</li>
+                  if let Some(sales_in_usd) = sales_in_usd {
+                      <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
+                      <span class="badge bg-primary">{format!("Sell Volume in {}", sales_in_usd.currency)}</span><span>{ format_price(sales_in_usd) }</span></li>
+                  }
                </ul>
             </div>
         </div>
@@ -157,12 +162,12 @@ fn render_trades_volume(stats_data: &StatsData) -> Html {
                         html! {
                           <div class={format!("col-md-2 p-2 m-2 border rounded")}>
                             <p class="text-white fs-5"><strong>{format!("{} in {}", formatting_utils::format_number_with_spaces(&volume.total_trades), volume.total_in_buy_currency.currency)}</strong></p>
-                            <p class="text-white fs-5"><strong>{formatting_utils::format_price(&volume.total_in_buy_currency)}</strong></p>
+                            <p class="text-white fs-5"><strong>{format_price(&volume.total_in_buy_currency)}</strong></p>
                             <i class="fas fa-equals fs-3 text-white"></i>
                             <ul class="list-group list-group-flush">
                               { volume.totals_in_other_currency.iter().map(|price|
                               html!(
-                                    <li class="list-group-item bg-dark text-white fs-5">{formatting_utils::format_price(&price)}</li>
+                                    <li class="list-group-item bg-dark text-white fs-5">{format_price(&price)}</li>
                                   )).collect::<Html>() }
                             </ul>
                           </div>

@@ -1,8 +1,7 @@
-use crate::route::Route;
 use crate::utils::formatting_utils;
+use crate::view::asset::{image::AssetImage, title::AssetTitle};
 use model::model::asset::IlluvitarAssetData;
 use yew::prelude::*;
-use yew_router::prelude::*;
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
@@ -22,74 +21,91 @@ pub fn asset_land_function_component(props: &Props) -> Html {
 }
 
 fn intro(asset: &IlluvitarAssetData) -> Html {
+    let name = &asset.common_asset_data.name;
+    let image_url = asset.common_asset_data.image_url.clone();
     let burned = asset.common_asset_data.burned.clone();
-    html!(
-        <div class="container-fluid p-5 bg-gray">
+    let accessorised_illuvitar = &asset.accessorised_illuvitar;
+    let origin_illuvitar = &asset.origin_illuvitar;
+    let d1sk = &asset.d1sk;
+    html! {
+        <div class="container-fluid p-3 bg-gray">
             <div class="container animate__animated animate__fadeIn animate__faster">
-                <div class="row g-0">
-                  <div class="col-lg-5 order-lg-1 d-flex align-items-center justify-content-center text-center">
-                    <img src={asset.common_asset_data.image_url.clone()}
-                      class={format!("w-75 img-fluid shadow-gradient {}", if {burned} {"grayscale"} else {""})}
-                      loading="lazy" alt={asset.common_asset_data.name.clone()}/>
-                  </div>
-                  <div class="col-lg-7 d-flex align-items-center justify-content-lg-start justify-content-center order-lg-2 text-center text-lg-start p-md-5">
-                    <div class="d-flex flex-column">
-                      <div class="row align-items-center">
-                        <div class="col-md-auto">
-                          <p class="text-white fs-2 my-2">{asset.common_asset_data.name.clone()}</p>
-                        </div>
-                        <div class="col-md-auto">
-                          if {burned} {
-                              <i style="color: #ff0000; font-size: 1.75rem;" class="fa-solid fa-fire"></i>
-                          }
-                        </div>
+                { html! { <AssetTitle name={name.clone()} {burned}/> } }
+                <div class="row">
+                  <div class="col-lg align-items-center justify-content-lg-start justify-content-center order-lg-2 text-center text-lg-start mt-3">
+                      { html! { <AssetImage name={name.clone()} {image_url} {burned}/> } }
+                      <div class="bg-dark p-3 rounded border border-2 border-dark my-3">
+                        <p class="text-white fs-5 mt-0">{format!("Power {}", asset.total_power)}</p>
+                        <p class="text-white fs-4 mb-2">{format!("Set {}", asset.set.clone())}</p>
+                        <p class="text-white fs-4 mb-2">{format!("Tier {}", asset.tier.clone())}</p>
+                        <p class="text-white fs-4 mb-2">{format!("Stage {}", asset.stage.clone())}</p>
+                        <p class="text-white fs-4 mb-2">{format!("Wave {}", asset.wave.clone())}</p>
+                        <p class="text-white fs-4 mb-2">{format!("Class {}", asset.class.clone())}</p>
+                        <p class="text-white fs-4 mb-2">{format!("Affinity {}", asset.affinity.clone())}</p>
+                        <p class="text-white fs-4 mb-2">{format!("Expression {}", asset.expression.clone())}</p>
                       </div>
-                      <p class="text-white fs-5 mt-0">{format!("Power {}", asset.total_power)}</p>
-                      <p class="text-white fs-4 mb-2">{format!("Set {}", asset.set.clone())}</p>
-                      <p class="text-white fs-4 mb-2">{format!("Tier {}", asset.tier.clone())}</p>
-                      <p class="text-white fs-4 mb-2">{format!("Stage {}", asset.stage.clone())}</p>
-                      <p class="text-white fs-4 mb-2">{format!("Wave {}", asset.wave.clone())}</p>
-                      <p class="text-white fs-4 mb-2">{format!("Class {}", asset.class.clone())}</p>
-                      <p class="text-white fs-4 mb-2">{format!("Affinity {}", asset.affinity.clone())}</p>
-                      <p class="text-white fs-4 mb-2">{format!("Expression {}", asset.expression.clone())}</p>
-                      <p class="text-white fs-4 mb-2"> {"Origin "}
-                          <Link<Route> to={Route::Asset {token_address: asset.source_token_address.clone(), token_id: asset.source_disk_id}} classes="btn btn-primary me-1 mb-1">
-                              { asset.source_disk_type.clone() }
-                          </Link<Route>>
-                      </p>
-                      if {asset.origin_illuvitar_id.is_some()} {
-                        <p class="text-white fs-4 mb-2">
-                             {"Original Illuvitar "}
-                             <Link<Route> to={Route::Asset {token_address: asset.common_asset_data.token_address.clone(),
-                                                             token_id: asset.origin_illuvitar_id.unwrap()}} classes="btn btn-primary me-1 mb-1">
-                                 { asset.common_asset_data.name.clone() }
-                             </Link<Route>>
-                        </p>
-                      }
-                      if {asset.accessorised_illuvitar_id.is_some()} {
-                        <p class="text-white fs-4 mb-2">
-                             {"Accessorised Illuvitar "}
-                             <Link<Route> to={Route::Asset {token_address: asset.common_asset_data.token_address.clone(),
-                                                             token_id: asset.accessorised_illuvitar_id.unwrap()}} classes="btn btn-primary me-1 mb-1">
-                                 { asset.common_asset_data.name.clone() }
-                             </Link<Route>>
-                        </p>
-                      }
+                  </div>
+                  <div class="col-lg align-items-center justify-content-lg-start justify-content-center order-lg-2 text-center text-lg-start ps-lg-4">
+                    <div>
                       if {!burned} {
                         <p class="text-white fs-4 mb-2">
                             {"Owned by "}
                             {formatting_utils::format_wallet_link(&asset.common_asset_data.current_owner)}
                         </p>
                       }
+                      if let Some(d1sk) = d1sk {
+                        <div>
+                            <p class="text-white fs-4 mb-0">{"Origin"}</p>
+                            <div class="row text-center p-3 justify-content-left">
+                                <div class="col-md-3 text-center mb-2 mx-1 p-0 border border-muted rounded bg-dark">
+                                   <p class="fs-5 text-white m-0 p-1">{&d1sk.name}</p>
+                                   <div class="justify-content-center align-items-end py-2">
+                                     { formatting_utils::get_asset_link(&d1sk.token_address, d1sk.token_id, &d1sk.image_url) }
+                                   </div>
+                                </div>
+                            </div>
+                        </div>
+                      }
+                      if let Some(origin_illuvitar) = origin_illuvitar {
+                        <div>
+                            <p class="text-white fs-4 mb-0">{"Original Illuvitar"}</p>
+                            <div class="row text-center p-3 justify-content-left">
+                                <div class="col-md-3 text-center mb-2 mx-1 p-0 border border-muted rounded bg-dark">
+                                   <p class="fs-5 text-white m-0 p-1">{&origin_illuvitar.name}</p>
+                                   <div class="justify-content-center align-items-end py-2">
+                                     { formatting_utils::get_asset_link(&origin_illuvitar.token_address, origin_illuvitar.token_id, &origin_illuvitar.image_url) }
+                                   </div>
+                                </div>
+                            </div>
+                        </div>
+                      }
+                      if let Some(accessorised_illuvitar) = accessorised_illuvitar {
+                        <div>
+                            <p class="text-white fs-4 mb-0">{"Accessorised Illuvitar"}</p>
+                            <div class="row text-center p-3 justify-content-left">
+                                <div class="col-md-3 text-center mb-2 mx-1 p-0 border border-muted rounded bg-dark">
+                                   <p class="fs-5 text-white m-0 p-1">{&accessorised_illuvitar.name}</p>
+                                   <div class="justify-content-center align-items-end py-2">
+                                     { formatting_utils::get_asset_link(&accessorised_illuvitar.token_address, accessorised_illuvitar.token_id, &accessorised_illuvitar.image_url) }
+                                   </div>
+                                </div>
+                            </div>
+                        </div>
+                      }
                       if {!asset.accessories.is_empty()} {
                           <div>
-                            <p class="text-white fs-4 mb-2">{"Accessories"}</p>
-                              { asset.accessories.iter().map(|accessory |
-                              html!(
-                                  <Link<Route> to={Route::Asset {token_address: accessory.token_address.clone(), token_id: accessory.token_id}} classes="btn btn-primary me-1 mb-1">
-                                      { accessory.name.clone() }
-                                  </Link<Route>>
-                              )).collect::<Html>() }
+                             <p class="text-white fs-4 mb-0">{"Accessories"}</p>
+                             <div class="row text-center p-3 justify-content-left">
+                                  { asset.accessories.iter().map(|accessory |
+                                  html!(
+                                    <div class="col-md-3 mb-2 mx-1 p-0 border border-muted rounded bg-dark d-flex flex-column">
+                                        <p class="fs-5 text-white m-0 p-1">{&accessory.name}</p>
+                                        <div class="d-flex justify-content-center align-items-end py-2 flex-grow-1">
+                                          { formatting_utils::get_asset_link(&accessory.token_address, accessory.token_id, &accessory.image_url) }
+                                        </div>
+                                    </div>
+                                  )).collect::<Html>() }
+                             </div>
                           </div>
                         }
                     </div>
@@ -97,5 +113,5 @@ fn intro(asset: &IlluvitarAssetData) -> Html {
                 </div>
             </div>
         </div>
-    )
+    }
 }

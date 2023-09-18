@@ -48,6 +48,7 @@ pub struct AssetContentData {
     pub token_id: i32,
     pub token_address: String,
     pub name: String,
+    pub image_url: String,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -56,10 +57,8 @@ pub struct AccessoriesAssetData {
     pub tier: String,
     pub stage: String,
     pub slot: String,
-    pub source_token_address: String,
-    pub source_disk_type: String,
-    pub source_disk_id: i32,
     pub multiplier: String,
+    pub d1sk: Option<AssetContentData>,
     pub illuvitar: Option<AssetContentData>,
 }
 
@@ -75,11 +74,9 @@ pub struct IlluvitarAssetData {
     pub affinity: String,
     pub expression: String,
     pub total_power: i32,
-    pub source_token_address: String,
-    pub source_disk_type: String,
-    pub source_disk_id: i32,
-    pub origin_illuvitar_id: Option<i32>,
-    pub accessorised_illuvitar_id: Option<i32>,
+    pub d1sk: Option<AssetContentData>,
+    pub origin_illuvitar: Option<AssetContentData>,
+    pub accessorised_illuvitar: Option<AssetContentData>,
     pub accessories: Vec<AssetContentData>,
 }
 

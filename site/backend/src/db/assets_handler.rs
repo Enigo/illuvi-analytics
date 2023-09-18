@@ -77,7 +77,8 @@ async fn get_d1sk_asset(
     common_asset_data: CommonAssetData,
 ) -> Option<AssetData> {
     let content = match query_as::<_, AssetContentDb>(
-        "select token_id, token_address, metadata->>'name' as name from asset where (metadata ->> 'Source Disk Id')::int4 = $1
+        "select token_id, token_address, metadata->>'name' as name, metadata->>'image_url' as image_url
+         from asset where (metadata ->> 'Source Disk Id')::int4 = $1
             and metadata ->> 'Base Illuvitar Token Id' is null order by token_address, name")
         .bind(token_id)
         .fetch_all(pool)
@@ -132,7 +133,7 @@ async fn get_accessories_asset(
             FROM asset
             where (metadata ->> 'Slot') is not null and token_id=$1
         )
-        SELECT iluv.token_id, iluv.token_address, iluv.metadata->>'name' as name
+        SELECT iluv.token_id, iluv.token_address, iluv.metadata->>'name' as name, iluv.metadata->>'image_url' as image_url
         FROM asset iluv
                  JOIN acc_data acc ON acc.token_id = (iluv.metadata ->> (acc.slot || ' Token Id'))::int4")
         .bind(token_id)
@@ -146,35 +147,32 @@ async fn get_accessories_asset(
         }
     };
 
+    let d1sk = get_source_d1sk(pool, token_address, token_id).await;
+
     return match query_as::<_, AccessoriesAssetDb>(
         "select metadata->>'Tier' as tier, metadata->>'Stage' as stage, metadata->>'Slot' as slot,
-         metadata->>'Source Disk Type' as source_disk_type, (metadata ->> 'Source Disk Id')::int4 as source_disk_id,
          metadata->>'Multiplier' as multiplier
          from asset where token_address=$1 and token_id=$2",
     )
-        .bind(token_address)
-        .bind(token_id)
-        .fetch_one(pool)
-        .await
+    .bind(token_address)
+    .bind(token_id)
+    .fetch_one(pool)
+    .await
     {
-        Ok(result) => {
-            Some(AssetData {
-                accessories: Some(AccessoriesAssetData {
-                    common_asset_data,
-                    tier: result.tier,
-                    stage: result.stage,
-                    slot: result.slot,
-                    source_token_address: D1SK.to_owned(),
-                    source_disk_type: result.source_disk_type,
-                    source_disk_id: result.source_disk_id,
-                    multiplier: result.multiplier,
-                    illuvitar,
-                }),
-                land: None,
-                d1sk: None,
-                illuvitar: None,
-            })
-        }
+        Ok(result) => Some(AssetData {
+            accessories: Some(AccessoriesAssetData {
+                common_asset_data,
+                tier: result.tier,
+                stage: result.stage,
+                slot: result.slot,
+                multiplier: result.multiplier,
+                d1sk,
+                illuvitar,
+            }),
+            land: None,
+            d1sk: None,
+            illuvitar: None,
+        }),
         Err(e) => {
             error!("Error fetching data: {e}");
             None
@@ -189,7 +187,8 @@ async fn get_illuvitar_asset(
     common_asset_data: CommonAssetData,
 ) -> Option<AssetData> {
     let accessories: Vec<AssetContentData> = match query(
-        "SELECT value::int4 as token_id, metadata ->> (replace(key, ' Token Id', '') || ' Name') as name
+        "SELECT value::int4 as token_id, metadata ->> (replace(key, ' Token Id', '') || ' Name') as name,
+                        metadata->>(replace(key, ' Token Id', '') || ' Image Url') as image_url
                      FROM asset CROSS JOIN LATERAL jsonb_each_text(metadata) AS m(key, value)
                      WHERE token_address=$1 and token_id=$2 and key LIKE '%Token Id'
                        AND key NOT LIKE '%Base Illuvitar Token Id%'")
@@ -200,7 +199,7 @@ async fn get_illuvitar_asset(
     {
         Ok(result) => {
             result.into_iter().map(|row| AssetContentData {
-                token_id: row.get(0), token_address: ACCESSORIES.to_owned(), name: row.get(1)
+                token_id: row.get(0), token_address: ACCESSORIES.to_owned(), name: row.get(1), image_url: row.get(2)
             }).collect()
         }
         Err(e) => {
@@ -209,25 +208,50 @@ async fn get_illuvitar_asset(
         }
     };
 
-    let accessorised_illuvitar_id: Option<i32> = match query(
-        "select token_id from asset where (metadata ->> 'Base Illuvitar Token Id')::integer = $1",
+    let accessorised_illuvitar = match query_as::<_, AssetContentDb>(
+        "select token_id, token_address, metadata->>'name' as name, metadata->>'image_url' as image_url
+         from asset where (metadata ->> 'Base Illuvitar Token Id')::integer = $1",
     )
     .bind(token_id)
     .fetch_optional(pool)
     .await
     {
-        Ok(result) => result.map(|value| value.get(0)),
+        Ok(result) => result.map(|value| value.into()),
         Err(e) => {
             error!("Error fetching data: {e}");
             None
         }
     };
 
+    let origin_illuvitar = match query_as::<_, AssetContentDb>(
+        "WITH acc_data AS (
+            SELECT token_address, (metadata ->> 'Base Illuvitar Token Id') AS origin_illuvitar_id
+            FROM asset
+            where token_address=$1 and token_id=$2
+        )
+        select a.token_id, a.token_address, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url
+        from asset a
+                 join acc_data acc ON (acc.origin_illuvitar_id)::int4 = a.token_id and acc.token_address = a.token_address
+        where a.token_id = (acc.origin_illuvitar_id)::int4",
+    )
+    .bind(token_address)
+    .bind(token_id)
+    .fetch_optional(pool)
+    .await
+    {
+        Ok(result) => result.map(|value| value.into()),
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            None
+        }
+    };
+
+    let d1sk = get_source_d1sk(&pool, &token_address, &token_id).await;
+
     return match query_as::<_, IlluvitarAssetDb>(
         "select metadata->>'Set' as set, metadata->>'Line' as line, metadata->>'Tier' as tier, metadata->>'Wave' as wave,
          metadata->>'Stage' as stage, metadata->>'Class' as class, metadata->>'Affinity' as affinity,
-         metadata->>'Expression' as expression, (metadata->>'Total Power')::int4 as total_power,
-         metadata->>'Source Disk Type' as source_disk_type, (metadata->>'Source Disk Id')::int4 as source_disk_id, (metadata->>'Base Illuvitar Token Id')::int4 as origin_illuvitar_id
+         metadata->>'Expression' as expression, (metadata->>'Total Power')::int4 as total_power
          from asset where token_address=$1 and token_id=$2",
     )
         .bind(token_address)
@@ -248,11 +272,9 @@ async fn get_illuvitar_asset(
                     affinity: result.affinity,
                     expression: result.expression,
                     total_power: result.total_power,
-                    source_token_address: D1SK.to_owned(),
-                    source_disk_type: result.source_disk_type,
-                    source_disk_id: result.source_disk_id,
-                    origin_illuvitar_id: result.origin_illuvitar_id,
-                    accessorised_illuvitar_id,
+                    d1sk,
+                    origin_illuvitar,
+                    accessorised_illuvitar,
                     accessories,
                 }),
                 land: None,
@@ -265,6 +287,36 @@ async fn get_illuvitar_asset(
             None
         }
     };
+}
+
+async fn get_source_d1sk(
+    pool: &Pool<Postgres>,
+    token_address: &String,
+    token_id: &i32,
+) -> Option<AssetContentData> {
+    let d1sk = match query_as::<_, AssetContentDb>(
+        "WITH acc_data AS (
+            SELECT (metadata ->> 'Source Disk Id') AS source_disk_id
+            FROM asset
+            where token_address=$1 and token_id=$2
+        )
+        select a.token_id, a.token_address, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url
+        from asset a
+                 join acc_data acc ON (acc.source_disk_id)::int4 = a.token_id
+        where a.token_id = (acc.source_disk_id)::int4 and a.token_address=$3")
+        .bind(token_address)
+        .bind(token_id)
+        .bind(D1SK)
+        .fetch_optional(pool)
+        .await
+    {
+        Ok(result) => result.map(|value| value.into()),
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            None
+        }
+    };
+    d1sk
 }
 
 async fn get_land_asset(
@@ -479,6 +531,7 @@ struct AssetContentDb {
     token_id: i32,
     token_address: String,
     name: String,
+    image_url: String,
 }
 
 impl From<AssetContentDb> for AssetContentData {
@@ -487,6 +540,7 @@ impl From<AssetContentDb> for AssetContentData {
             token_id: data.token_id,
             token_address: data.token_address,
             name: data.name,
+            image_url: data.image_url,
         }
     }
 }
@@ -496,8 +550,6 @@ struct AccessoriesAssetDb {
     tier: String,
     stage: String,
     slot: String,
-    source_disk_type: String,
-    source_disk_id: i32,
     multiplier: String,
 }
 
@@ -512,9 +564,6 @@ struct IlluvitarAssetDb {
     affinity: String,
     expression: String,
     total_power: i32,
-    source_disk_type: String,
-    source_disk_id: i32,
-    origin_illuvitar_id: Option<i32>,
 }
 
 #[derive(FromRow)]

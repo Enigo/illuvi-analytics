@@ -13,7 +13,7 @@ pub fn spinner_dark() -> Html {
 fn spinner(background: String) -> Html {
     return html!(
         <selection>
-            <div class={format!("container-fluid p-5 {}", background)}>
+            <div class={format!("container-fluid pt-5 {}", background)}>
                 <div class="container">
                   <div class="spinner-container">
                     <div class="spinner"></div>
