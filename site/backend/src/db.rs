@@ -1,3 +1,4 @@
+pub mod assets_events_handler;
 pub mod assets_handler;
 pub mod collection_handler;
 pub mod db_handler;

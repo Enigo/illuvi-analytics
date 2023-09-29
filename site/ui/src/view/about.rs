@@ -49,7 +49,6 @@ pub fn about_function_component() -> Html {
                             <ul class="list-group">
                               <li class="list-group-item bg-dark"><p class="text-white fs-5 m-1">{"Adding new page for Illuvium Universe monetary data"}</p></li>
                               <li class="list-group-item bg-dark"><p class="text-white fs-5 m-1">{"Adding new page for wallet stats"}</p></li>
-                              <li class="list-group-item bg-dark"><p class="text-white fs-5 m-1">{"Introducing 'find similar assets' functionality"}</p></li>
                               <li class="list-group-item bg-dark"><p class="text-white fs-5 m-1">{"Assets Explore UI overhaul"}</p></li>
                               <li class="list-group-item bg-dark"><p class="text-white fs-5 m-1">{"General UI overhaul (because we can make it better)"}</p></li>
                             </ul>

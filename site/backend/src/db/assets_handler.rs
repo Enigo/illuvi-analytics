@@ -1,14 +1,13 @@
+use crate::db::db_model::SingleTransactionDb;
 use log::error;
 use model::model::asset::{
-    AccessoriesAssetData, AssetContentData, AssetData, CommonAssetData, D1skAssetData,
-    IlluvitarAssetData, LandAssetData, TransactionData,
+    AccessoriesAssetData, AssetContentData, AssetData, CommonAssetData, CommonOrderData,
+    D1skAssetData, IlluvitarAssetData, LandAssetData,
 };
-use model::model::price::Price;
-use sqlx::types::{chrono::NaiveDateTime, Decimal};
-use sqlx::{query, query_as, FromRow, PgPool, Pool, Postgres, Row};
+use model::model::transaction::SingleTransaction;
+use sqlx::{query, query_as, FromRow, Pool, Postgres, Row};
 
 const BURNED_ADDRESS: &str = "0x0000000000000000000000000000000000000000";
-const BURNED: &str = "Burned";
 
 const D1SK: &str = "0xc1f1da534e227489d617cd742481fd5a23f6a003";
 const LAND: &str = "0x9e0d99b864e1ac12565125c5a82b59adea5a09cd";
@@ -35,11 +34,7 @@ pub async fn get_asset_for_token_address_and_token_id(
             Some(CommonAssetData {
                 token_id: result.token_id,
                 token_address: result.token_address,
-                current_owner: if burned {
-                    BURNED.to_string()
-                } else {
-                    result.current_owner
-                },
+                current_owner: result.current_owner,
                 burned,
                 name: result.name,
                 image_url: result.image_url,
@@ -91,6 +86,67 @@ async fn get_d1sk_asset(
         }
     };
 
+    let last_filled_orders = match query_as::<_, SingleTransactionDb>(
+        "with current_asset as (select * from asset where token_address=$1 and token_id=$2)
+        select a.token_id, a.attribute, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url,
+               round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency,
+               od.buy_price, od.updated_on, od.transaction_id from order_data od
+            join asset a on od.token_address = a.token_address and od.token_id = a.token_id
+            join current_asset ca on ca.token_address = a.token_address
+            join coin_history ch on od.buy_currency = ch.symbol and od.updated_on::date = ch.datestamp
+        where a.token_address = $1 and od.status = 'filled'
+        and a.attribute = ca.attribute
+        order by updated_on desc")
+        .bind(token_address)
+        .bind(token_id)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => result.into_iter().map(|t| t.into()).collect(),
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            vec![]
+        }
+    };
+
+    let common_order_data = match query_as::<_, SingleTransactionDb>(
+        "with current_asset as (select * from asset where token_address=$1 and token_id=$2)
+        select a.token_id, a.attribute, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url,
+               round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency,
+               od.buy_price, od.updated_on, od.transaction_id from order_data od
+            join asset a on od.token_address = a.token_address and od.token_id = a.token_id
+            join current_asset ca on ca.token_address = a.token_address
+            join coin_history ch on od.buy_currency = ch.symbol
+        where a.token_address = $1 and od.status = 'active'
+        and a.attribute = ca.attribute and ch.datestamp = (select max(datestamp) from coin_history)
+        order by sum_usd, buy_price, token_id")
+        .bind(token_address)
+        .bind(token_id)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => {
+            let active_orders: Vec<SingleTransaction> = result.into_iter().map(|t| t.into()).collect();
+            if active_orders.is_empty() {
+                None
+            } else {
+                let listed_index = active_orders.iter().position(|item| &item.token_id == token_id);
+
+                Some(CommonOrderData {
+                    active_orders: active_orders.len() as i64,
+                    total_filled_orders: last_filled_orders.len() as i64,
+                    listed_index: listed_index.map(|index| (index + 1) as i64),
+                    last_active_orders: active_orders.into_iter().take(3).collect(),
+                    last_filled_orders: last_filled_orders.into_iter().take(3).collect()
+                })
+            }
+        },
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            None
+        }
+    };
+
     return match query_as::<_, D1skAssetDb>(
         "select (metadata->>'Alpha')::bool as alpha, metadata->>'Wave' as wave, metadata->>'Set' as set
          from asset where token_address=$1 and token_id=$2",
@@ -108,6 +164,7 @@ async fn get_d1sk_asset(
                     wave: result.wave,
                     set: result.set,
                     content,
+                    common_order_data
                 }),
                 land: None,
                 accessories: None,
@@ -149,6 +206,67 @@ async fn get_accessories_asset(
 
     let d1sk = get_source_d1sk(pool, token_address, token_id).await;
 
+    let last_filled_orders = match query_as::<_, SingleTransactionDb>(
+        "with current_asset as (select * from asset where token_address=$1 and token_id=$2)
+        select a.token_id, a.attribute, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url,
+               round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency,
+               od.buy_price, od.updated_on, od.transaction_id from order_data od
+            join asset a on od.token_address = a.token_address and od.token_id = a.token_id
+            join current_asset ca on ca.token_address = a.token_address
+            join coin_history ch on od.buy_currency = ch.symbol and od.updated_on::date = ch.datestamp
+        where a.token_address = $1 and od.status = 'filled'
+        and a.metadata->>'name' = ca.metadata->>'name'
+        order by updated_on desc")
+        .bind(token_address)
+        .bind(token_id)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => result.into_iter().map(|t| t.into()).collect(),
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            vec![]
+        }
+    };
+
+    let common_order_data = match query_as::<_, SingleTransactionDb>(
+        "with current_asset as (select * from asset where token_address=$1 and token_id=$2)
+        select a.token_id, a.attribute, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url,
+               round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency,
+               od.buy_price, od.updated_on, od.transaction_id from order_data od
+            join asset a on od.token_address = a.token_address and od.token_id = a.token_id
+            join current_asset ca on ca.token_address = a.token_address
+            join coin_history ch on od.buy_currency = ch.symbol
+        where a.token_address = $1 and od.status = 'active'
+        and a.metadata->>'name' = ca.metadata->>'name' and ch.datestamp = (select max(datestamp) from coin_history)
+        order by sum_usd, buy_price, token_id")
+        .bind(token_address)
+        .bind(token_id)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => {
+            let active_orders: Vec<SingleTransaction> = result.into_iter().map(|t| t.into()).collect();
+            if active_orders.is_empty() {
+                None
+            } else {
+                let listed_index = active_orders.iter().position(|item| &item.token_id == token_id);
+
+                Some(CommonOrderData {
+                    active_orders: active_orders.len() as i64,
+                    total_filled_orders: last_filled_orders.len() as i64,
+                    listed_index: listed_index.map(|index| (index + 1) as i64),
+                    last_active_orders: active_orders.into_iter().take(3).collect(),
+                    last_filled_orders: last_filled_orders.into_iter().take(3).collect()
+                })
+            }
+        },
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            None
+        }
+    };
+
     return match query_as::<_, AccessoriesAssetDb>(
         "select metadata->>'Tier' as tier, metadata->>'Stage' as stage, metadata->>'Slot' as slot,
          metadata->>'Multiplier' as multiplier
@@ -162,6 +280,7 @@ async fn get_accessories_asset(
         Ok(result) => Some(AssetData {
             accessories: Some(AccessoriesAssetData {
                 common_asset_data,
+                common_order_data,
                 tier: result.tier,
                 stage: result.stage,
                 slot: result.slot,
@@ -246,6 +365,69 @@ async fn get_illuvitar_asset(
         }
     };
 
+    let last_filled_orders = match query_as::<_, SingleTransactionDb>(
+        "with current_asset as (select * from asset where token_address=$1 and token_id=$2)
+        select a.token_id, a.attribute, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url,
+               round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency,
+               od.buy_price, od.updated_on, od.transaction_id from order_data od
+            join asset a on od.token_address = a.token_address and od.token_id = a.token_id
+            join current_asset ca on ca.token_address = a.token_address
+            join coin_history ch on od.buy_currency = ch.symbol and od.updated_on::date = ch.datestamp
+        where a.token_address = $1 and od.status = 'filled'
+        and a.attribute = ca.attribute and a.metadata->>'Line' = ca.metadata->>'Line' and a.metadata->>'Finish' = ca.metadata->>'Finish' and a.metadata->>'Alpha' = ca.metadata->>'Alpha'
+            and a.metadata->>'Stage' = ca.metadata->>'Stage'
+        order by updated_on desc")
+        .bind(token_address)
+        .bind(token_id)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => result.into_iter().map(|t| t.into()).collect(),
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            vec![]
+        }
+    };
+
+    let common_order_data = match query_as::<_, SingleTransactionDb>(
+        "with current_asset as (select * from asset where token_address=$1 and token_id=$2)
+        select a.token_id, a.attribute, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url,
+               round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency,
+               od.buy_price, od.updated_on, od.transaction_id from order_data od
+            join asset a on od.token_address = a.token_address and od.token_id = a.token_id
+            join current_asset ca on ca.token_address = a.token_address
+            join coin_history ch on od.buy_currency = ch.symbol
+        where a.token_address = $1 and od.status = 'active'
+        and a.attribute = ca.attribute and a.metadata->>'Line' = ca.metadata->>'Line' and a.metadata->>'Finish' = ca.metadata->>'Finish' and a.metadata->>'Alpha' = ca.metadata->>'Alpha'
+            and a.metadata->>'Stage' = ca.metadata->>'Stage' and ch.datestamp = (select max(datestamp) from coin_history)
+        order by sum_usd, buy_price, token_id")
+        .bind(token_address)
+        .bind(token_id)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => {
+            let active_orders: Vec<SingleTransaction> = result.into_iter().map(|t| t.into()).collect();
+            if active_orders.is_empty() {
+                None
+            } else {
+                let listed_index = active_orders.iter().position(|item| &item.token_id == token_id);
+
+                Some(CommonOrderData {
+                    active_orders: active_orders.len() as i64,
+                    total_filled_orders: last_filled_orders.len() as i64,
+                    listed_index: listed_index.map(|index| (index + 1) as i64),
+                    last_active_orders: active_orders.into_iter().take(3).collect(),
+                    last_filled_orders: last_filled_orders.into_iter().take(3).collect()
+                })
+            }
+        },
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            None
+        }
+    };
+
     let d1sk = get_source_d1sk(&pool, &token_address, &token_id).await;
 
     return match query_as::<_, IlluvitarAssetDb>(
@@ -263,6 +445,7 @@ async fn get_illuvitar_asset(
             Some(AssetData {
                 illuvitar: Some(IlluvitarAssetData {
                     common_asset_data,
+                    common_order_data,
                     set: result.set,
                     line: result.line,
                     tier: result.tier,
@@ -325,6 +508,67 @@ async fn get_land_asset(
     token_id: &i32,
     common_asset_data: CommonAssetData,
 ) -> Option<AssetData> {
+    let last_filled_orders = match query_as::<_, SingleTransactionDb>(
+        "with current_asset as (select * from asset where token_address=$1 and token_id=$2)
+        select a.token_id, a.attribute, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url,
+               round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency,
+               od.buy_price, od.updated_on, od.transaction_id from order_data od
+            join asset a on od.token_address = a.token_address and od.token_id = a.token_id
+            join current_asset ca on ca.token_address = a.token_address
+            join coin_history ch on od.buy_currency = ch.symbol and od.updated_on::date = ch.datestamp
+        where a.token_address = $1 and od.status = 'filled'
+        and a.attribute = ca.attribute and a.metadata->>'region' = ca.metadata->>'region'
+        order by updated_on desc")
+        .bind(token_address)
+        .bind(token_id)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => result.into_iter().map(|t| t.into()).collect(),
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            vec![]
+        }
+    };
+
+    let common_order_data = match query_as::<_, SingleTransactionDb>(
+        "with current_asset as (select * from asset where token_address=$1 and token_id=$2)
+        select a.token_id, a.attribute, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url,
+               round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency,
+               od.buy_price, od.updated_on, od.transaction_id from order_data od
+            join asset a on od.token_address = a.token_address and od.token_id = a.token_id
+            join current_asset ca on ca.token_address = a.token_address
+            join coin_history ch on od.buy_currency = ch.symbol
+        where a.token_address = $1 and od.status = 'active'
+        and a.attribute = ca.attribute and a.metadata->>'region' = ca.metadata->>'region' and ch.datestamp = (select max(datestamp) from coin_history)
+        order by sum_usd, buy_price, token_id")
+        .bind(token_address)
+        .bind(token_id)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(result) => {
+            let active_orders: Vec<SingleTransaction> = result.into_iter().map(|t| t.into()).collect();
+            if active_orders.is_empty() {
+                None
+            } else {
+                let listed_index = active_orders.iter().position(|item| &item.token_id == token_id);
+
+                Some(CommonOrderData {
+                    active_orders: active_orders.len() as i64,
+                    total_filled_orders: last_filled_orders.len() as i64,
+                    listed_index: listed_index.map(|index| (index + 1) as i64),
+                    last_active_orders: active_orders.into_iter().take(3).collect(),
+                    last_filled_orders: last_filled_orders.into_iter().take(3).collect()
+                })
+            }
+        },
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            None
+        }
+    };
+
     return match query_as::<_, LandAssetDb>(
         "select metadata->>'tier' as tier, metadata->>'solon' as solon, metadata->>'carbon' as carbon, metadata->>'crypton' as crypton,
          metadata->>'silicon' as silicon, metadata->>'hydrogen' as hydrogen, metadata->>'hyperion' as hyperion, metadata->>'landmark' as landmark
@@ -339,6 +583,7 @@ async fn get_land_asset(
             Some(AssetData {
                 land: Some(LandAssetData {
                     common_asset_data,
+                    common_order_data,
                     tier: result.tier,
                     solon: result.solon,
                     carbon: result.carbon,
@@ -356,142 +601,6 @@ async fn get_land_asset(
         Err(e) => {
             error!("Error fetching data: {e}");
             None
-        }
-    };
-}
-
-pub async fn get_events_for_token_address_and_token_id(
-    pool: &Pool<Postgres>,
-    token_address: &String,
-    token_id: &i32,
-) -> Option<Vec<TransactionData>> {
-    let mut events =
-        get_all_transfers_for_token_address_and_token_id(pool, token_address, token_id).await;
-    let orders =
-        get_all_order_data_for_token_address_and_token_id(pool, token_address, token_id).await;
-    events.extend(orders);
-
-    let mints =
-        get_all_mint_data_for_token_address_and_token_id(pool, token_address, token_id).await;
-    events.extend(mints);
-
-    let deposits =
-        get_all_deposit_data_for_token_address_and_token_id(pool, token_address, token_id).await;
-    events.extend(deposits);
-
-    let withdrawals =
-        get_all_withdrawal_data_for_token_address_and_token_id(pool, token_address, token_id).await;
-    events.extend(withdrawals);
-
-    events.sort_by(|a, b| b.updated_on.cmp(&a.updated_on));
-
-    Some(events)
-}
-
-async fn get_all_transfers_for_token_address_and_token_id(
-    pool: &PgPool,
-    token_address: &String,
-    token_id: &i32,
-) -> Vec<TransactionData> {
-    return match query_as::<_, TransferDataDb>(
-        "select transaction_id, wallet_from, wallet_to, created_on from transfer where token_address=$1 and token_id=$2")
-        .bind(token_address)
-        .bind(token_id)
-        .fetch_all(pool)
-        .await
-    {
-        Ok(result) => result.into_iter().map(|t| t.into()).collect(),
-        Err(e) => {
-            error!("Error fetching data: {e}");
-            vec![]
-        }
-    };
-}
-
-async fn get_all_order_data_for_token_address_and_token_id(
-    pool: &PgPool,
-    token_address: &String,
-    token_id: &i32,
-) -> Vec<TransactionData> {
-    return match query_as::<_, OrderDataDb>(
-        "select od.transaction_id, od.status, od.wallet_from, od.wallet_to, od.updated_on, od.buy_currency, od.buy_price, round((od.buy_price * ch.usd), 2) as usd_price
-         from order_data od join coin_history ch on
-            case when od.status='active' then ch.datestamp=now()::date
-                else ch.datestamp = od.updated_on::date
-            end
-            and od.buy_currency = ch.symbol
-         where od.token_address=$1 and od.token_id=$2")
-        .bind(token_address)
-        .bind(token_id)
-        .fetch_all(pool)
-        .await
-    {
-        Ok(result) => result.into_iter().map(|t| t.into()).collect(),
-        Err(e) => {
-            error!("Error fetching data: {e}");
-            vec![]
-        }
-    };
-}
-
-async fn get_all_mint_data_for_token_address_and_token_id(
-    pool: &PgPool,
-    token_address: &String,
-    token_id: &i32,
-) -> Vec<TransactionData> {
-    return match query_as::<_, MintDataDb>(
-        "select m.transaction_id, m.wallet, m.currency, m.price, m.minted_on, round((m.price * ch.usd), 2) as usd_price from mint m
-         join coin_history ch on ch.datestamp = m.minted_on::date and (m.currency is null OR ch.symbol = m.currency)
-         where token_address=$1 and token_id=$2 limit 1") // limit 1 for the case when currency is null
-        .bind(token_address)
-        .bind(token_id)
-        .fetch_all(pool)
-        .await
-    {
-        Ok(result) => result.into_iter().map(|mint| mint.into()).collect(),
-        Err(e) => {
-            error!("Error fetching data: {e}");
-            vec![]
-        }
-    };
-}
-
-async fn get_all_deposit_data_for_token_address_and_token_id(
-    pool: &PgPool,
-    token_address: &String,
-    token_id: &i32,
-) -> Vec<TransactionData> {
-    return match query_as::<_, DepositDataDb>(
-        "select transaction_id, wallet, created_on from deposit where token_address=$1 and token_id=$2")
-        .bind(token_address)
-        .bind(token_id)
-        .fetch_all(pool)
-        .await
-    {
-        Ok(result) => result.into_iter().map(|mint| mint.into()).collect(),
-        Err(e) => {
-            error!("Error fetching data: {e}");
-            vec![]
-        }
-    };
-}
-
-async fn get_all_withdrawal_data_for_token_address_and_token_id(
-    pool: &PgPool,
-    token_address: &String,
-    token_id: &i32,
-) -> Vec<TransactionData> {
-    return match query_as::<_, WithdrawalDataDb>(
-        "select transaction_id, wallet, created_on from withdrawal where token_address=$1 and token_id=$2")
-        .bind(token_address)
-        .bind(token_id)
-        .fetch_all(pool)
-        .await
-    {
-        Ok(result) => result.into_iter().map(|mint| mint.into()).collect(),
-        Err(e) => {
-            error!("Error fetching data: {e}");
-            vec![]
         }
     };
 }
@@ -564,147 +673,4 @@ struct IlluvitarAssetDb {
     affinity: String,
     expression: String,
     total_power: i32,
-}
-
-#[derive(FromRow)]
-struct TransferDataDb {
-    transaction_id: Option<i32>,
-    wallet_from: String,
-    wallet_to: String,
-    created_on: NaiveDateTime,
-}
-
-impl From<TransferDataDb> for TransactionData {
-    fn from(transfer_data: TransferDataDb) -> Self {
-        let wallet_to = transfer_data.wallet_to;
-        Self {
-            id: transfer_data.transaction_id,
-            wallet_from: transfer_data.wallet_from,
-            wallet_to: if wallet_to == BURNED_ADDRESS {
-                "".to_string()
-            } else {
-                wallet_to.clone()
-            },
-            event: if wallet_to == BURNED_ADDRESS {
-                BURNED.to_string()
-            } else {
-                "Transfer".to_string()
-            },
-            updated_on: transfer_data.created_on,
-            price: None,
-            usd_price: None,
-        }
-    }
-}
-
-#[derive(FromRow)]
-struct OrderDataDb {
-    transaction_id: Option<i32>,
-    wallet_from: String,
-    wallet_to: Option<String>,
-    status: String,
-    updated_on: NaiveDateTime,
-    buy_currency: String,
-    buy_price: Decimal,
-    usd_price: Decimal,
-}
-
-impl From<OrderDataDb> for TransactionData {
-    fn from(order_data: OrderDataDb) -> Self {
-        Self {
-            id: order_data.transaction_id,
-            wallet_from: order_data.wallet_from,
-            wallet_to: order_data.wallet_to.unwrap_or_default(),
-            event: format!("{} {}", "Trade", order_data.status),
-            updated_on: order_data.updated_on,
-            price: Some(Price {
-                currency: order_data.buy_currency,
-                price: f64::try_from(order_data.buy_price).unwrap(),
-            }),
-            usd_price: Some(Price {
-                currency: "USD".to_owned(),
-                price: f64::try_from(order_data.usd_price).unwrap(),
-            }),
-        }
-    }
-}
-
-#[derive(FromRow)]
-struct MintDataDb {
-    transaction_id: i32,
-    wallet: String,
-    minted_on: NaiveDateTime,
-    currency: Option<String>,
-    price: Option<Decimal>,
-    usd_price: Option<Decimal>,
-}
-
-impl From<MintDataDb> for TransactionData {
-    fn from(mint_data_db: MintDataDb) -> Self {
-        let mut price = None;
-        let mut usd_price = None;
-        if mint_data_db.currency.is_some() {
-            price = Some(Price {
-                currency: mint_data_db.currency.unwrap(),
-                price: f64::try_from(mint_data_db.price.unwrap()).unwrap(),
-            });
-
-            usd_price = Some(Price {
-                currency: "USD".to_owned(),
-                price: f64::try_from(mint_data_db.usd_price.unwrap()).unwrap(),
-            })
-        }
-
-        Self {
-            id: Some(mint_data_db.transaction_id),
-            wallet_from: "".to_string(),
-            wallet_to: mint_data_db.wallet,
-            event: "Mint".to_string(),
-            updated_on: mint_data_db.minted_on,
-            price,
-            usd_price,
-        }
-    }
-}
-
-#[derive(FromRow)]
-struct DepositDataDb {
-    transaction_id: i32,
-    wallet: String,
-    created_on: NaiveDateTime,
-}
-
-impl From<DepositDataDb> for TransactionData {
-    fn from(data: DepositDataDb) -> Self {
-        Self {
-            id: Some(data.transaction_id),
-            wallet_from: "".to_string(),
-            wallet_to: data.wallet,
-            event: "Deposit".to_string(),
-            updated_on: data.created_on,
-            price: None,
-            usd_price: None,
-        }
-    }
-}
-
-#[derive(FromRow)]
-struct WithdrawalDataDb {
-    transaction_id: i32,
-    wallet: String,
-    created_on: NaiveDateTime,
-}
-
-impl From<WithdrawalDataDb> for TransactionData {
-    fn from(data: WithdrawalDataDb) -> Self {
-        Self {
-            id: Some(data.transaction_id),
-            wallet_from: data.wallet,
-            wallet_to: "".to_string(),
-            event: "Withdrawal".to_string(),
-            updated_on: data.created_on,
-            price: None,
-            usd_price: None,
-        }
-    }
 }

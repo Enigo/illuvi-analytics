@@ -1,11 +1,11 @@
-use crate::db::db_model::SingleTradeDb;
+use crate::db::db_model::SingleTransactionDb;
 use log::error;
 use model::model::price::Price;
 use model::model::stats::{
     StatsData, StatsDataMostEventForToken, StatsDataMostEventForWallet, StatsDataTotal,
     StatsDataTotalOrder, StatsDataTradesVolume,
 };
-use model::model::trade::SingleTrade;
+use model::model::transaction::SingleTransaction;
 use sqlx::types::Decimal;
 use sqlx::{query, query_as, FromRow, Pool, Postgres, Row};
 use std::collections::BTreeMap;
@@ -193,15 +193,15 @@ async fn fetch_most_trading_wallets(
 async fn fetch_cheapest_and_most_expensive_trades_by_attribute(
     token_address: &String,
     pool: &Pool<Postgres>,
-) -> BTreeMap<String, Vec<SingleTrade>> {
-    return match query_as::<_, SingleTradeDb>(
+) -> BTreeMap<String, Vec<SingleTransaction>> {
+    return match query_as::<_, SingleTransactionDb>(
         "select attribute, token_id, image_url, name, sum_usd, buy_currency, buy_price, updated_on, transaction_id
             from cheapest_and_most_expensive_trades_by_attribute_mat_view
             where token_address=$1")
         .bind(token_address)
         .fetch_all(pool).await {
         Ok(result) => {
-            let mut cheapest_and_most_expensive_trades_by_attribute: BTreeMap<String, Vec<SingleTrade>> = BTreeMap::new();
+            let mut cheapest_and_most_expensive_trades_by_attribute: BTreeMap<String, Vec<SingleTransaction>> = BTreeMap::new();
             for trade in result {
                 let trades_map = cheapest_and_most_expensive_trades_by_attribute.entry(trade.attribute.clone()).or_insert(Vec::new());
                 trades_map.push(trade.into());

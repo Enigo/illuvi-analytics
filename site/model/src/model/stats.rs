@@ -1,5 +1,5 @@
 use crate::model::price::Price;
-use crate::model::trade::SingleTrade;
+use crate::model::transaction::SingleTransaction;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -11,7 +11,7 @@ pub struct StatsData {
     pub most_transferred_tokens: Vec<StatsDataMostEventForToken>,
     pub most_traded_tokens: Vec<StatsDataMostEventForToken>,
     pub most_trading_wallets: Vec<StatsDataMostEventForWallet>,
-    pub cheapest_and_most_expensive_trades_by_attribute: BTreeMap<String, Vec<SingleTrade>>,
+    pub cheapest_and_most_expensive_trades_by_attribute: BTreeMap<String, Vec<SingleTransaction>>,
 }
 
 #[derive(Serialize, Deserialize)]

@@ -6,6 +6,7 @@ use crate::controller::{
 use crate::db::db_handler;
 use crate::utils::env_utils;
 use actix_cors::Cors;
+use actix_web::middleware::Compress;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use dotenvy::dotenv;
@@ -38,6 +39,7 @@ async fn main() -> std::io::Result<()> {
                     .allowed_origin(&env_utils::as_string("ALLOWED_ORIGIN"))
                     .allowed_methods(vec!["GET"]),
             )
+            .wrap(Compress::default())
     })
     .bind((
         env_utils::as_string("ENDPOINT"),

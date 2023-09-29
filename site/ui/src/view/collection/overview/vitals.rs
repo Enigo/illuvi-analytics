@@ -1,6 +1,6 @@
 use crate::utils::formatting_utils::{format_number_with_spaces, format_price};
 use crate::utils::{api_utils, formatting_utils};
-use crate::view::collection::common::{no_data::NoData, trade_view::SingleTradeView};
+use crate::view::common::{no_data::NoData, transactions_view::TransactionsView};
 use crate::view::loading::LoadingSpinnerGray;
 use log::error;
 use model::model::vitals::{AttributeData, VitalsData, VitalsDataFloor};
@@ -78,13 +78,12 @@ fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
     let last_trades = &vitals_data.last_trades;
     let last_trades_html = html! {
         <div class="row bg-dark text-center my-3 p-3 justify-content-center border rounded animate__animated animate__fadeIn animate__faster animate__delay-0.25s">
-            <p class="text-white fs-3 mb-2">{format!("Last {} trades", last_trades.len())}</p>
-            { last_trades.iter().enumerate().map(|(index, trade)| {
-                let trade = trade.clone();
-                let token_address = token_address.clone();
-                let render_border_end =  index < last_trades.len() - 1;
-                html!( <SingleTradeView {token_address} {trade} {render_border_end}/> )
-            }).collect::<Html>() }
+            <p class="text-white fs-3 mb-2">{"Last trades"}</p>
+            {
+                html!(
+                    <TransactionsView transactions={last_trades.clone()} token_address={token_address.clone()}/>
+                )
+            }
         </div>
     };
 

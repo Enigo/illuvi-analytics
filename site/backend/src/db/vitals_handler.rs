@@ -1,7 +1,7 @@
-use crate::db::db_model::SingleTradeDb;
+use crate::db::db_model::SingleTransactionDb;
 use log::error;
 use model::model::price::Price;
-use model::model::trade::SingleTrade;
+use model::model::transaction::SingleTransaction;
 use model::model::vitals::{AttributeData, TotalMintedBurnt, VitalsData, VitalsDataFloor};
 use sqlx::types::Decimal;
 use sqlx::{query, query_as, FromRow, Pool, Postgres, Row};
@@ -129,8 +129,11 @@ async fn fetch_trades_volume(pool: &Pool<Postgres>, token_address: &String) -> V
     trades_volume
 }
 
-async fn fetch_last_trades(pool: &Pool<Postgres>, token_address: &String) -> Vec<SingleTrade> {
-    let last_trades = match query_as::<_, SingleTradeDb>(
+async fn fetch_last_trades(
+    pool: &Pool<Postgres>,
+    token_address: &String,
+) -> Vec<SingleTransaction> {
+    let last_trades = match query_as::<_, SingleTransactionDb>(
         // attribute is not needed for this data as of now
         "SELECT a.token_id, a.attribute, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url, round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency,
                 od.buy_price, od.updated_on, od.transaction_id

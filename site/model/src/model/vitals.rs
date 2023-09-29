@@ -1,5 +1,5 @@
 use crate::model::price::Price;
-use crate::model::trade::SingleTrade;
+use crate::model::transaction::SingleTransaction;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -8,7 +8,7 @@ pub struct VitalsData {
     pub total_assets: i64,
     pub unique_holders: i64,
     pub trades_volume: Vec<Price>,
-    pub last_trades: Vec<SingleTrade>,
+    pub last_trades: Vec<SingleTransaction>,
     pub data_by_attribute: BTreeMap<String, AttributeData>,
 }
 

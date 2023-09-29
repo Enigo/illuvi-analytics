@@ -1,10 +1,10 @@
 use model::model::price::Price;
-use model::model::trade::SingleTrade;
+use model::model::transaction::SingleTransaction;
 use sqlx::types::{chrono::NaiveDateTime, Decimal};
 use sqlx::FromRow;
 
 #[derive(FromRow)]
-pub struct SingleTradeDb {
+pub struct SingleTransactionDb {
     pub attribute: String,
     pub token_id: i32,
     pub name: String,
@@ -13,11 +13,11 @@ pub struct SingleTradeDb {
     pub buy_currency: String,
     pub buy_price: Decimal,
     pub updated_on: NaiveDateTime,
-    pub transaction_id: i32,
+    pub transaction_id: Option<i32>,
 }
 
-impl From<SingleTradeDb> for SingleTrade {
-    fn from(trade: SingleTradeDb) -> Self {
+impl From<SingleTransactionDb> for SingleTransaction {
+    fn from(trade: SingleTransactionDb) -> Self {
         Self {
             token_id: trade.token_id,
             name: trade.name.clone(),

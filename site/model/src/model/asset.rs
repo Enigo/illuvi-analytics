@@ -1,6 +1,7 @@
 use crate::model::price::Price;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use crate::model::transaction::SingleTransaction;
 
 #[derive(Serialize, Deserialize)]
 pub struct TransactionData {
@@ -24,6 +25,7 @@ pub struct AssetData {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct LandAssetData {
     pub common_asset_data: CommonAssetData,
+    pub common_order_data: Option<CommonOrderData>,
     pub tier: String,
     pub solon: String,
     pub carbon: String,
@@ -37,6 +39,7 @@ pub struct LandAssetData {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct D1skAssetData {
     pub common_asset_data: CommonAssetData,
+    pub common_order_data: Option<CommonOrderData>,
     pub alpha: bool,
     pub wave: String,
     pub set: String,
@@ -54,6 +57,7 @@ pub struct AssetContentData {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct AccessoriesAssetData {
     pub common_asset_data: CommonAssetData,
+    pub common_order_data: Option<CommonOrderData>,
     pub tier: String,
     pub stage: String,
     pub slot: String,
@@ -65,6 +69,7 @@ pub struct AccessoriesAssetData {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct IlluvitarAssetData {
     pub common_asset_data: CommonAssetData,
+    pub common_order_data: Option<CommonOrderData>,
     pub set: String,
     pub line: String,
     pub tier: String,
@@ -88,4 +93,14 @@ pub struct CommonAssetData {
     pub burned: bool,
     pub name: String,
     pub image_url: String,
+}
+
+
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
+pub struct CommonOrderData {
+    pub active_orders: i64,
+    pub total_filled_orders: i64,
+    pub listed_index: Option<i64>,
+    pub last_active_orders: Vec<SingleTransaction>,
+    pub last_filled_orders: Vec<SingleTransaction>,
 }

@@ -1,6 +1,6 @@
 use crate::utils::formatting_utils::{format_number_with_spaces, format_price};
 use crate::utils::{api_utils, formatting_utils, navigation_utils};
-use crate::view::collection::common::{no_data::NoData, trade_view::SingleTradeView};
+use crate::view::common::{no_data::NoData, transactions_view::TransactionsView};
 use crate::view::loading::LoadingSpinnerGray;
 use log::error;
 use model::model::stats::{
@@ -222,12 +222,11 @@ fn render_cheapest_and_most_expensive_trades(
                 html! {
                      <div class="row text-center mb-5 p-3 bg-dark border rounded">
                         <p class="text-white fs-4 mb-2">{attribute}</p>
-                        { trades.iter().enumerate().map(|(index, trade)| {
-                            let trade = trade.clone();
-                            let token_address = token_address.clone();
-                            let render_border_end = index < trades.len() - 1;
-                            html!( <SingleTradeView {token_address} {trade} {render_border_end}/> )
-                        }).collect::<Html>() }
+                        {
+                            html!(
+                                <TransactionsView transactions={trades.clone()} token_address={token_address.clone()}/>
+                            )
+                        }
                     </div>
                 }
             }).collect::<Html>() }
