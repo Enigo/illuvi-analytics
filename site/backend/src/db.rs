@@ -6,3 +6,5 @@ mod db_model;
 pub mod mints_handler;
 pub mod stats_handler;
 pub mod vitals_handler;
+pub mod wallet_events_handler;
+pub mod wallet_handler;

@@ -5,7 +5,6 @@ use model::model::price::Price;
 use yew::*;
 use yew_router::prelude::*;
 
-const IMMUTASCAN_WALLET: &str = "https://immutascan.io/address/";
 const IMMUTASCAN_TX: &str = "https://immutascan.io/tx/";
 
 pub fn capitalize_label(label: &String) -> String {
@@ -100,21 +99,19 @@ pub fn format_price(price: &Price) -> Html {
 }
 
 pub fn format_wallet_link(wallet: &String) -> Html {
-    fn format_wallet(wallet: &String) -> String {
-        if wallet.is_empty() {
-            return "".to_string();
-        }
-        return format!("{}...{}", &wallet[0..5], &wallet[wallet.len() - 4..]);
-    }
-
     if wallet.is_empty() {
         return html!();
     }
 
     return html!(
-        <a href={format!("{}{}", IMMUTASCAN_WALLET, wallet)} target="_blank" class="btn btn-primary me-1">
-              { format_wallet(&wallet) }
-        </a>);
+        <Link<Route> to={Route::Wallet {wallet: wallet.to_owned()} } classes="btn btn-primary me-1">
+            { format_wallet(&wallet) }
+        </Link<Route>>
+    );
+}
+
+fn format_wallet(wallet: &String) -> String {
+    return format!("{}...{}", &wallet[0..5], &wallet[wallet.len() - 4..]);
 }
 
 pub fn format_transaction_link(transaction_id: i32, text: String) -> Html {

@@ -1,18 +1,6 @@
-use crate::model::price::Price;
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use crate::model::price::Price;
 use crate::model::transaction::SingleTransaction;
-
-#[derive(Serialize, Deserialize)]
-pub struct TransactionData {
-    pub id: Option<i32>,
-    pub wallet_from: String,
-    pub wallet_to: String,
-    pub event: String,
-    pub updated_on: NaiveDateTime,
-    pub price: Option<Price>,
-    pub usd_price: Option<Price>,
-}
 
 #[derive(Serialize, Deserialize)]
 pub struct AssetData {
@@ -99,6 +87,7 @@ pub struct CommonAssetData {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct CommonOrderData {
     pub active_orders: i64,
+    pub buy_price: Option<Price>,
     pub total_filled_orders: i64,
     pub listed_index: Option<i64>,
     pub last_active_orders: Vec<SingleTransaction>,

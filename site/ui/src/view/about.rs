@@ -48,9 +48,7 @@ pub fn about_function_component() -> Html {
                         <div class="col-md-5 p-0 border rounded">
                             <ul class="list-group">
                               <li class="list-group-item bg-dark"><p class="text-white fs-5 m-1">{"Adding new page for Illuvium Universe monetary data"}</p></li>
-                              <li class="list-group-item bg-dark"><p class="text-white fs-5 m-1">{"Adding new page for wallet stats"}</p></li>
                               <li class="list-group-item bg-dark"><p class="text-white fs-5 m-1">{"Assets Explore UI overhaul"}</p></li>
-                              <li class="list-group-item bg-dark"><p class="text-white fs-5 m-1">{"General UI overhaul (because we can make it better)"}</p></li>
                             </ul>
                         </div>
                         <p class="text-white fs-5 mt-4 mb-1">{"Have feedback to share? That's awesome, send it over!"}</p>

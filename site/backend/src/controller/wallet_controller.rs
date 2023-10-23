@@ -1,49 +1,40 @@
-use crate::db::{assets_events_handler, assets_handler};
+use crate::db::{wallet_events_handler, wallet_handler};
 use actix_web::{get, web, HttpResponse, Responder};
 use serde::Deserialize;
 use sqlx::{Pool, Postgres};
 
 #[derive(Deserialize)]
-pub struct Params {
-    token_address: String,
-    token_id: i32,
+pub struct WalletParams {
+    wallet: String,
 }
 
 #[derive(Deserialize)]
 pub struct EventsParams {
-    token_address: String,
-    token_id: i32,
+    wallet: String,
     page: i32,
     event: String,
 }
 
-#[get("/api/asset/asset")]
-pub async fn get_asset(
+#[get("/api/wallet/wallet")]
+pub async fn get_wallet(
     pool: web::Data<Pool<Postgres>>,
-    params: web::Query<Params>,
+    params: web::Query<WalletParams>,
 ) -> actix_web::Result<impl Responder> {
-    return match assets_handler::get_asset_for_token_address_and_token_id(
-        &pool,
-        &params.token_address,
-        &params.token_id,
-    )
-    .await
-    {
+    return match wallet_handler::get_wallet(&pool, &params.wallet).await {
         None => Ok(HttpResponse::NotFound().finish()),
         Some(asset) => Ok(HttpResponse::Ok().json(asset)),
     };
 }
 
-#[get("/api/asset/events")]
-pub async fn get_events(
+#[get("/api/wallet/events")]
+pub async fn get_wallet_events(
     pool: web::Data<Pool<Postgres>>,
     params: web::Query<EventsParams>,
 ) -> actix_web::Result<impl Responder> {
-    return match assets_events_handler::get_events_for_token_address_and_token_id(
+    return match wallet_events_handler::get_wallet_events(
         &pool,
-        &params.token_address,
-        &params.token_id,
-        &params.page,
+        &params.wallet,
+        params.page,
         &params.event,
     )
     .await

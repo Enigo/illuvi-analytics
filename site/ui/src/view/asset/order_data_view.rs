@@ -24,7 +24,7 @@ pub fn asset_order_data_function_component(props: &Props) -> Html {
                 <div class="row mb-3">
                     <div class="col">
                         <a href={format!("{}/{}/{}", ILLUVIDEX, token_address, token_id)} target="_blank" class="btn btn-primary me-1">
-                               { "Buy on Illuvidex" }
+                               { "Buy on Illuvidex for " } { formatting_utils::format_price(&common_order_data.buy_price.clone().unwrap()) }
                         </a>
                     </div>
                 </div>

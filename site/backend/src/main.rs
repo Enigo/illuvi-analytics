@@ -2,6 +2,7 @@ use crate::controller::{
     assets_controller::get_asset, assets_controller::get_events,
     collection_controller::get_collection, collection_controller::get_collections,
     mints_controller::get_mints, stats_controller::get_stats, vitals_controller::get_vitals,
+    wallet_controller::get_wallet, wallet_controller::get_wallet_events,
 };
 use crate::db::db_handler;
 use crate::utils::env_utils;
@@ -34,6 +35,9 @@ async fn main() -> std::io::Result<()> {
             .service(get_collection)
             .service(get_stats)
             .service(get_vitals)
+            .service(get_wallet)
+            .service(get_wallet)
+            .service(get_wallet_events)
             .wrap(
                 Cors::default()
                     .allowed_origin(&env_utils::as_string("ALLOWED_ORIGIN"))

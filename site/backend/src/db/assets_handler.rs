@@ -126,20 +126,7 @@ async fn get_d1sk_asset(
         .await
     {
         Ok(result) => {
-            let active_orders: Vec<SingleTransaction> = result.into_iter().map(|t| t.into()).collect();
-            if active_orders.is_empty() {
-                None
-            } else {
-                let listed_index = active_orders.iter().position(|item| &item.token_id == token_id);
-
-                Some(CommonOrderData {
-                    active_orders: active_orders.len() as i64,
-                    total_filled_orders: last_filled_orders.len() as i64,
-                    listed_index: listed_index.map(|index| (index + 1) as i64),
-                    last_active_orders: active_orders.into_iter().take(3).collect(),
-                    last_filled_orders: last_filled_orders.into_iter().take(3).collect()
-                })
-            }
+            get_common_order_data(token_id, last_filled_orders, result)
         },
         Err(e) => {
             error!("Error fetching data: {e}");
@@ -246,20 +233,7 @@ async fn get_accessories_asset(
         .await
     {
         Ok(result) => {
-            let active_orders: Vec<SingleTransaction> = result.into_iter().map(|t| t.into()).collect();
-            if active_orders.is_empty() {
-                None
-            } else {
-                let listed_index = active_orders.iter().position(|item| &item.token_id == token_id);
-
-                Some(CommonOrderData {
-                    active_orders: active_orders.len() as i64,
-                    total_filled_orders: last_filled_orders.len() as i64,
-                    listed_index: listed_index.map(|index| (index + 1) as i64),
-                    last_active_orders: active_orders.into_iter().take(3).collect(),
-                    last_filled_orders: last_filled_orders.into_iter().take(3).collect()
-                })
-            }
+            get_common_order_data(token_id, last_filled_orders, result)
         },
         Err(e) => {
             error!("Error fetching data: {e}");
@@ -407,20 +381,7 @@ async fn get_illuvitar_asset(
         .await
     {
         Ok(result) => {
-            let active_orders: Vec<SingleTransaction> = result.into_iter().map(|t| t.into()).collect();
-            if active_orders.is_empty() {
-                None
-            } else {
-                let listed_index = active_orders.iter().position(|item| &item.token_id == token_id);
-
-                Some(CommonOrderData {
-                    active_orders: active_orders.len() as i64,
-                    total_filled_orders: last_filled_orders.len() as i64,
-                    listed_index: listed_index.map(|index| (index + 1) as i64),
-                    last_active_orders: active_orders.into_iter().take(3).collect(),
-                    last_filled_orders: last_filled_orders.into_iter().take(3).collect()
-                })
-            }
+            get_common_order_data(token_id, last_filled_orders, result)
         },
         Err(e) => {
             error!("Error fetching data: {e}");
@@ -548,20 +509,7 @@ async fn get_land_asset(
         .await
     {
         Ok(result) => {
-            let active_orders: Vec<SingleTransaction> = result.into_iter().map(|t| t.into()).collect();
-            if active_orders.is_empty() {
-                None
-            } else {
-                let listed_index = active_orders.iter().position(|item| &item.token_id == token_id);
-
-                Some(CommonOrderData {
-                    active_orders: active_orders.len() as i64,
-                    total_filled_orders: last_filled_orders.len() as i64,
-                    listed_index: listed_index.map(|index| (index + 1) as i64),
-                    last_active_orders: active_orders.into_iter().take(3).collect(),
-                    last_filled_orders: last_filled_orders.into_iter().take(3).collect()
-                })
-            }
+            get_common_order_data(token_id, last_filled_orders, result)
         },
         Err(e) => {
             error!("Error fetching data: {e}");
@@ -603,6 +551,34 @@ async fn get_land_asset(
             None
         }
     };
+}
+
+fn get_common_order_data(
+    token_id: &i32,
+    last_filled_orders: Vec<SingleTransaction>,
+    result: Vec<SingleTransactionDb>,
+) -> Option<CommonOrderData> {
+    if result.is_empty() {
+        None
+    } else {
+        let current_item = result
+            .iter()
+            .enumerate()
+            .find(|(_, item)| &item.token_id == token_id);
+        let listed_index = current_item.map(|(index, _)| (index + 1) as i64);
+        let buy_price = current_item
+            .map(|(_, transaction)| transaction.clone().into())
+            .map(|t: SingleTransaction| t.buy_price);
+
+        Some(CommonOrderData {
+            active_orders: result.len() as i64,
+            buy_price,
+            total_filled_orders: last_filled_orders.len() as i64,
+            listed_index,
+            last_active_orders: result.into_iter().take(3).map(|t| t.into()).collect(),
+            last_filled_orders: last_filled_orders.into_iter().take(3).collect(),
+        })
+    }
 }
 
 // https://github.com/launchbadge/sqlx/discussions/1886

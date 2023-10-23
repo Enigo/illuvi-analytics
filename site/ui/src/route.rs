@@ -1,6 +1,6 @@
 use crate::view::{
     about::About, asset::page::Asset, collection::overview::page::Collection,
-    collection::stats::page::CollectionStats, home::Home,
+    collection::stats::page::CollectionStats, home::Home, wallet::page::Wallet,
 };
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -16,6 +16,8 @@ pub enum Route {
     Collection { token_address: String },
     #[at("/:token_address/stats")]
     CollectionStats { token_address: String },
+    #[at("/wallet/:wallet")]
+    Wallet { wallet: String },
     #[at("/about")]
     About,
     #[at("/")]
@@ -29,6 +31,7 @@ pub fn switch(route: Route) -> Html {
     match route {
         Route::Home => html! { <Home />},
         Route::About => html! { <About />},
+        Route::Wallet { wallet } => html! { <Wallet wallet={wallet}/>},
         Route::Collection { token_address } => html! {<Collection token_address={token_address}/>},
         Route::CollectionStats { token_address } => {
             html! {<CollectionStats token_address={token_address}/>}
