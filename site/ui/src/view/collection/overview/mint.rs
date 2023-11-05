@@ -21,8 +21,8 @@ pub fn collection_mint_function_component(props: &Props) -> Html {
         let mint = mint.clone();
         let page = page.clone();
         let page_val = *page;
-        use_effect_with_deps(
-            move |_| {
+        use_effect_with(
+            (page_val, props.token_address.clone()), move |_| {
                 mint.set(None);
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<MintData>(
@@ -43,7 +43,6 @@ pub fn collection_mint_function_component(props: &Props) -> Html {
                     }
                 });
             },
-            (page_val, props.token_address.clone()),
         );
     }
 

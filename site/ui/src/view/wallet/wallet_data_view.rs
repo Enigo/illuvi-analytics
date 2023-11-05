@@ -16,8 +16,8 @@ pub fn wallet_function_component(props: &Props) -> Html {
     {
         let wallet = props.wallet.clone();
         let wallet_data = wallet_data.clone();
-        use_effect_with_deps(
-            move |_| {
+        use_effect_with(
+            props.wallet.clone(), move |_| {
                 wallet_data.set(None);
                 navigation_utils::scroll_to_top();
                 wasm_bindgen_futures::spawn_local(async move {
@@ -35,7 +35,6 @@ pub fn wallet_function_component(props: &Props) -> Html {
                     }
                 });
             },
-            props.wallet.clone(),
         );
     }
 

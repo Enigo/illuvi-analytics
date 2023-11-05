@@ -36,8 +36,8 @@ pub fn events_table_function_component(props: &Props) -> Html {
         let event_index = event_index.clone();
         let event_val = *event_index;
         let event_types = event_types.clone();
-        use_effect_with_deps(
-            move |_| {
+        use_effect_with(
+            (page_val, event_val, props.url.clone()), move |_| {
                 event_data.set(None);
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<EventData>(
@@ -60,7 +60,6 @@ pub fn events_table_function_component(props: &Props) -> Html {
                     }
                 });
             },
-            (page_val, event_val, props.url.clone()),
         );
     }
 

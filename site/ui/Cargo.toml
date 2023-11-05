@@ -11,11 +11,11 @@ path = "src/main.rs"
 model = { path= "../model"}
 log = "0.4.20"
 wasm-logger = "0.2.0"
-yew = { version = "0.20.0", features = ["csr"] }
-yew-router = "0.17.0"
+yew = { version = "0.21.0", features = ["csr"] }
+yew-router = "0.18.0"
 reqwest = { version = "0.11.22", features = ["json"] }
-wasm-bindgen-futures = "0.4.37"
-serde = { version = "1.0.189", features = ["derive"] }
+wasm-bindgen-futures = "0.4.38"
+serde = { version = "1.0.190", features = ["derive"] }
 chrono = { version = "0.4.31", features = ["serde"] }
 dotenvy_macro = "0.15.7"
-web-sys = { version = "0.3.64", features = ["Window", "ScrollToOptions", "ScrollBehavior"] }
+web-sys = { version = "0.3.65", features = ["Window", "ScrollToOptions", "ScrollBehavior"] }

@@ -11,8 +11,8 @@ pub fn home_function_component() -> Html {
     let collections = use_state(|| vec![]);
     {
         let collections = collections.clone();
-        use_effect_with_deps(
-            move |_| {
+        use_effect_with(
+            (), move |_| {
                 navigation_utils::scroll_to_top();
                 wasm_bindgen_futures::spawn_local(async move {
                     match api_utils::fetch_single_api_response::<Vec<CollectionData>>(
@@ -29,7 +29,6 @@ pub fn home_function_component() -> Html {
                     }
                 });
             },
-            (),
         );
     }
 

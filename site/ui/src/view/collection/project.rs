@@ -15,8 +15,8 @@ pub fn collection_project_function_component(props: &Props) -> Html {
     {
         let token_address = props.token_address.clone();
         let collection = collection.clone();
-        use_effect_with_deps(
-            move |_| {
+        use_effect_with(
+            props.token_address.clone(), move |_| {
                 collection.set(None);
                 navigation_utils::scroll_to_top();
                 wasm_bindgen_futures::spawn_local(async move {
@@ -34,7 +34,6 @@ pub fn collection_project_function_component(props: &Props) -> Html {
                     }
                 });
             },
-            props.token_address.clone(),
         );
     }
 
