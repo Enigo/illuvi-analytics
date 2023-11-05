@@ -3,6 +3,7 @@ use crate::model::immutablex::mint::Mint;
 use async_trait::async_trait;
 use log::{error, info};
 use sqlx::types::chrono::{DateTime, NaiveDateTime};
+use sqlx::types::Decimal;
 use sqlx::{query, query_as, query_scalar, Pool, Postgres, QueryBuilder};
 
 pub struct MintSaver;
@@ -82,7 +83,7 @@ pub async fn update_price_and_currency_for_wallet(
 
 pub async fn update_price_and_currency_for_wallet_and_token_id(
     wallet: &str,
-    price: f32,
+    price: Decimal,
     currency: String,
     token_id: &i32,
     pool: &Pool<Postgres>,

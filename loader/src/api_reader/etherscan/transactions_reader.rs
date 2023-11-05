@@ -113,7 +113,7 @@ async fn process_tokens(
     api_key: &String,
     pool: &Pool<Postgres>,
 ) {
-    fn convert_into_value(value_str: &str, token_decimal_str: &str) -> f32 {
+    fn convert_into_value(value_str: &str, token_decimal_str: &str) -> Decimal {
         let value = Decimal::from_str(value_str).unwrap();
         let token_decimal = Decimal::from_str(&format!(
             "1{}",
@@ -126,9 +126,7 @@ async fn process_tokens(
             )
         ))
         .unwrap();
-        let f32_value = value / token_decimal;
-
-        return f32_value.to_f32().unwrap();
+        return  value / token_decimal;
     }
 
     let mut page = 1;
@@ -167,7 +165,7 @@ async fn process_transaction(
 
     mints_handler::update_price_and_currency_for_wallet_and_token_id(
         wallet.as_str(),
-        ether_value.to_f32().unwrap(),
+        ether_value,
         String::from("ETH"),
         &token_id,
         &pool,

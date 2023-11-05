@@ -4,7 +4,8 @@ use crate::utils::price_utils;
 use async_trait::async_trait;
 use log::{error, info};
 use sqlx::types::chrono::{DateTime, NaiveDateTime};
-use sqlx::{query, query_as, query_scalar, Pool, Postgres, QueryBuilder};
+use sqlx::types::Decimal;
+use sqlx::{query, query_as, query_scalar, Pool, Postgres, QueryBuilder, FromRow};
 
 pub struct OrderSaver;
 
@@ -41,7 +42,8 @@ impl Persistable<Order> for OrderSaver {
         });
 
         let query = query_builder.push(
-            " ON CONFLICT (order_id) DO UPDATE SET status = EXCLUDED.status, updated_on = EXCLUDED.updated_on;").build();
+            " ON CONFLICT (order_id) DO UPDATE SET status = EXCLUDED.status,
+             updated_on = EXCLUDED.updated_on, sell_price = EXCLUDED.sell_price, buy_price = EXCLUDED.buy_price").build();
         match query.execute(pool).await {
             Ok(result) => {
                 info!("Inserted {} rows", result.rows_affected())
@@ -111,6 +113,46 @@ pub async fn fetch_all_filled_order_ids_with_no_wallet_to_or_transaction_id_for_
     };
 }
 
+pub async fn fetch_all_not_checked_order_ids(
+    pool: &Pool<Postgres>,
+) -> Vec<OrderDb> {
+    return match query_as::<_, OrderDb>(
+        "select order_id, buy_price, sell_price from order_data"
+    )
+        .fetch_all(pool)
+        .await {
+        Ok(token_ids) => {
+            token_ids
+        }
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            vec![]
+        }
+    };
+}
+
+pub async fn update_buy_price_and_sell_price_for_order_id(
+    order_id: i32,
+    buy_price: Decimal,
+    sell_price: Decimal,
+    pool: &Pool<Postgres>,
+) {
+    match query("update order_data set buy_price = $1, sell_price = $2 where order_id = $3")
+        .bind(buy_price)
+        .bind(sell_price)
+        .bind(order_id)
+        .execute(pool)
+        .await
+    {
+        Ok(_) => {
+            info!("Updated order_id {order_id}")
+        }
+        Err(e) => {
+            error!("Error updating order_id {order_id}: {e}");
+        }
+    }
+}
+
 pub async fn update_wallet_to_and_transaction_id_for_order_id(
     order_id: i32,
     wallet_to: String,
@@ -131,4 +173,11 @@ pub async fn update_wallet_to_and_transaction_id_for_order_id(
             error!("Error updating order_id {order_id}: {e}");
         }
     }
+}
+
+#[derive(FromRow)]
+pub struct OrderDb {
+    pub order_id: i32,
+    pub buy_price: Decimal,
+    pub sell_price: Decimal,
 }

@@ -39,8 +39,6 @@ pub struct Sell {
 pub struct SellData {
     pub token_id: Option<String>,
     pub token_address: String,
-    pub decimals: Option<i32>,
-    pub quantity: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -61,4 +59,6 @@ pub struct SingleOrder {
     pub order_id: i32,
     #[serde(rename = "user")]
     pub wallet: String,
+    pub maker_fees: MakerFees,
+    pub taker_fees: TakerFees,
 }
