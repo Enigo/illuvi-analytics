@@ -1,7 +1,7 @@
 version: "3"
 services:
   db:
-    image: postgres:15.3
+    image: postgres:16.0
     shm_size: 1g
     command: -c max_connections=200 -c shared_buffers=2GB -c effective_cache_size=4GB -c work_mem=128MB
     restart: 'no'
@@ -15,7 +15,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   flyway:
-    image: flyway/flyway:9.19.1
+    image: flyway/flyway:10.0.0
     command: -url=jdbc:postgresql://db/illuvium-land -schemas=public -user=data-loader-local -password=notsecure -connectRetries=60 migrate
     volumes:
       - ./migrations:/flyway/sql
