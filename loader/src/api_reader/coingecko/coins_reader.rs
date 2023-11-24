@@ -26,7 +26,9 @@ async fn fetch_coins(pool: &Pool<Postgres>) {
         Some(missing_symbols) => {
             if !missing_symbols.is_empty() {
                 info!("Fetching ids for {:?}", missing_symbols);
-                match api_utils::fetch_single_api_response::<Vec<Coin>>(LIST_ENDPOINT).await {
+                match api_utils::fetch_single_api_response::<Vec<Coin>>(LIST_ENDPOINT, &vec![])
+                    .await
+                {
                     Some(coins) => {
                         info!(
                             "Processing response from {LIST_ENDPOINT} with {} coins",
@@ -64,7 +66,7 @@ async fn fetch_coins_history(pool: &Pool<Postgres>) {
             date.format("%d-%m-%Y").to_string().as_str(),
             1,
         );
-        match api_utils::fetch_single_api_response::<CoinHistory>(url.as_str()).await {
+        match api_utils::fetch_single_api_response::<CoinHistory>(url.as_str(), &vec![]).await {
             Some(coin_history) => {
                 info!("Processing response from {url}");
                 if coin_history.market_data.is_some() {

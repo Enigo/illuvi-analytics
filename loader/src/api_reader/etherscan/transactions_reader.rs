@@ -94,8 +94,11 @@ async fn fetch_transactions(
 ) -> Vec<transaction::TheResult> {
     let endpoint = format!("https://api.etherscan.io/api?module=account&action=txlist&address={}&page={}&offset=10000&startblock={}&endblock=99999999&sort=asc&apikey={}",
                            wallet, page, LAND_CONTRACT_CREATION_BLOCK, api_key);
-    return match api_utils::fetch_single_api_response::<transaction::Transaction>(endpoint.as_str())
-        .await
+    return match api_utils::fetch_single_api_response::<transaction::Transaction>(
+        endpoint.as_str(),
+        &vec![],
+    )
+    .await
     {
         Some(transaction) => {
             if transaction.status == "1" {
@@ -126,7 +129,7 @@ async fn process_tokens(
             )
         ))
         .unwrap();
-        return  value / token_decimal;
+        return value / token_decimal;
     }
 
     let mut page = 1;
@@ -176,7 +179,9 @@ async fn process_transaction(
 async fn fetch_tokens(wallet: String, api_key: &String, page: i8) -> Vec<token::TheResult> {
     let endpoint = format!("https://api.etherscan.io/api?module=account&action=tokentx&address={}&page={}&offset=10000&startblock={}&endblock=99999999&sort=asc&apikey={}",
                            wallet, page, LAND_CONTRACT_CREATION_BLOCK, api_key);
-    return match api_utils::fetch_single_api_response::<token::Token>(endpoint.as_str()).await {
+    return match api_utils::fetch_single_api_response::<token::Token>(endpoint.as_str(), &vec![])
+        .await
+    {
         Some(token) => {
             if token.status == "1" {
                 return token.result.unwrap();

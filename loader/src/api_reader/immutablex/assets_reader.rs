@@ -26,6 +26,7 @@ pub async fn update_metadata(pool: &Pool<Postgres>) {
         for pair in assets_handler::fetch_all_assets_with_no_metadata(pool).await {
             let result = api_utils::fetch_single_api_response::<TheResult>(
                 format!("{}/{}/{}", ASSET_URL, pair.0, pair.1).as_str(),
+                &utils::get_immutable_x_api_header(),
             )
             .await;
 

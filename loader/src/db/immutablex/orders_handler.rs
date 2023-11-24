@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use log::{error, info};
 use sqlx::types::chrono::{DateTime, NaiveDateTime};
 use sqlx::types::Decimal;
-use sqlx::{query, query_as, query_scalar, Pool, Postgres, QueryBuilder, FromRow};
+use sqlx::{query, query_as, query_scalar, FromRow, Pool, Postgres, QueryBuilder};
 
 pub struct OrderSaver;
 
@@ -113,17 +113,12 @@ pub async fn fetch_all_filled_order_ids_with_no_wallet_to_or_transaction_id_for_
     };
 }
 
-pub async fn fetch_all_not_checked_order_ids(
-    pool: &Pool<Postgres>,
-) -> Vec<OrderDb> {
-    return match query_as::<_, OrderDb>(
-        "select order_id, buy_price, sell_price from order_data"
-    )
+pub async fn fetch_all_not_checked_order_ids(pool: &Pool<Postgres>) -> Vec<OrderDb> {
+    return match query_as::<_, OrderDb>("select order_id, buy_price, sell_price from order_data")
         .fetch_all(pool)
-        .await {
-        Ok(token_ids) => {
-            token_ids
-        }
+        .await
+    {
+        Ok(token_ids) => token_ids,
         Err(e) => {
             error!("Error fetching data: {e}");
             vec![]

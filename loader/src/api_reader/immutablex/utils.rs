@@ -1,6 +1,7 @@
 use crate::api_reader::api_utils::fetch_single_api_response;
 use crate::db::immutablex::persistable::Persistable;
 use crate::model::immutablex::shared::PaginatedApi;
+use crate::utils::env_utils;
 use log::info;
 use serde::de::DeserializeOwned;
 use sqlx::{Pool, Postgres};
@@ -56,6 +57,11 @@ pub async fn fetch_all_api_responses_with_cursor<T: DeserializeOwned + Paginated
     results
 }
 
+pub fn get_immutable_x_api_header() -> Vec<(&'static str, String)> {
+    let api_key = env_utils::as_string("IMMUTABLE_X_API_KEY");
+    vec![("x-api-key", api_key)]
+}
+
 async fn fetch_and_get_result<T: DeserializeOwned + PaginatedApi>(
     url: &str,
     cursor: Option<String>,
@@ -65,7 +71,8 @@ async fn fetch_and_get_result<T: DeserializeOwned + PaginatedApi>(
     } else {
         String::from(url)
     };
-    let response = fetch_single_api_response::<T>(url.as_str()).await;
+    let response =
+        fetch_single_api_response::<T>(url.as_str(), &get_immutable_x_api_header()).await;
     match response {
         Some(result) => {
             info!("Processing response for {url}");

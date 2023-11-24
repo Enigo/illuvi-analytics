@@ -1,8 +1,8 @@
 use crate::api_reader::api_utils;
 use crate::api_reader::immutablex::utils;
 use crate::db::immutablex::orders_handler;
-use crate::db::immutablex::orders_handler::OrderSaver;
 use crate::db::immutablex::orders_handler::OrderDb;
+use crate::db::immutablex::orders_handler::OrderSaver;
 use crate::model::immutablex::order::{Order, SingleOrder};
 use crate::model::immutablex::trade::Trade;
 use crate::utils::{env_utils, price_utils};
@@ -37,18 +37,19 @@ pub async fn check_orders_consistency(pool: &Pool<Postgres>) {
         async fn process_id(order_db: OrderDb, pool: &Pool<Postgres>) {
             let order_id = order_db.order_id;
             let url = format!("{}/{}", ORDER_URL, order_id);
-            match api_utils::fetch_single_api_response::<SingleOrder>(url.as_str()).await {
+            match api_utils::fetch_single_api_response::<SingleOrder>(
+                url.as_str(),
+                &utils::get_immutable_x_api_header(),
+            )
+            .await
+            {
                 Some(order) => {
                     let maker_fees = order.maker_fees;
                     let taker_fees = order.taker_fees;
-                    let sell_price = price_utils::get_price(
-                        &maker_fees.quantity_with_fees,
-                        maker_fees.decimals,
-                    );
-                    let buy_price = price_utils::get_price(
-                        &taker_fees.quantity_with_fees,
-                        taker_fees.decimals,
-                    );
+                    let sell_price =
+                        price_utils::get_price(&maker_fees.quantity_with_fees, maker_fees.decimals);
+                    let buy_price =
+                        price_utils::get_price(&taker_fees.quantity_with_fees, taker_fees.decimals);
 
                     let mut to_update = false;
                     let sell_price_db = order_db.sell_price;
@@ -62,7 +63,10 @@ pub async fn check_orders_consistency(pool: &Pool<Postgres>) {
                         to_update = true;
                     }
                     if to_update {
-                        orders_handler::update_buy_price_and_sell_price_for_order_id(order_id, buy_price, sell_price, pool).await;
+                        orders_handler::update_buy_price_and_sell_price_for_order_id(
+                            order_id, buy_price, sell_price, pool,
+                        )
+                        .await;
                     }
                 }
                 None => {}
@@ -73,7 +77,7 @@ pub async fn check_orders_consistency(pool: &Pool<Postgres>) {
         info!("Checking orders consistency for {} orders", orders.len());
         let mut futures = futures::stream::iter(orders)
             .map(|order| process_id(order, &pool))
-            .buffer_unordered(2);
+            .buffer_unordered(45);
 
         while let Some(_) = futures.next().await {}
     }
@@ -95,7 +99,12 @@ async fn enrich_wallet_to_and_transaction_id(token_address: &String, pool: &Pool
                 let seller_order_id = single_trade.seller.order_id;
                 if unprocessed_orders.contains(&seller_order_id) {
                     let url = format!("{}/{}", ORDER_URL, single_trade.buyer.order_id);
-                    match api_utils::fetch_single_api_response::<SingleOrder>(url.as_str()).await {
+                    match api_utils::fetch_single_api_response::<SingleOrder>(
+                        url.as_str(),
+                        &utils::get_immutable_x_api_header(),
+                    )
+                    .await
+                    {
                         Some(order) => {
                             orders_handler::update_wallet_to_and_transaction_id_for_order_id(
                                 seller_order_id,
@@ -103,7 +112,7 @@ async fn enrich_wallet_to_and_transaction_id(token_address: &String, pool: &Pool
                                 single_trade.transaction_id,
                                 &pool,
                             )
-                                .await;
+                            .await;
                         }
                         None => {}
                     };
@@ -116,7 +125,7 @@ async fn enrich_wallet_to_and_transaction_id(token_address: &String, pool: &Pool
         token_address,
         &pool,
     )
-        .await
+    .await
     {
         Some(token_ids) => {
             info!(
@@ -125,7 +134,7 @@ async fn enrich_wallet_to_and_transaction_id(token_address: &String, pool: &Pool
             );
             let mut futures = futures::stream::iter(token_ids)
                 .map(|token_id| process_id(token_address, token_id, &pool))
-                .buffer_unordered(2);
+                .buffer_unordered(45);
 
             while let Some(_) = futures.next().await {}
         }

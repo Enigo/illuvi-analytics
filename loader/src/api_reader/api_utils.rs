@@ -1,11 +1,24 @@
 use log::error;
-use reqwest::StatusCode;
+use reqwest::header::{HeaderMap, HeaderValue};
+use reqwest::{Client, StatusCode};
 use serde::de::DeserializeOwned;
 
-pub async fn fetch_single_api_response<T: DeserializeOwned>(endpoint: &str) -> Option<T> {
-    let response = reqwest::get(endpoint).await;
+pub async fn fetch_single_api_response<T: DeserializeOwned>(
+    endpoint: &str,
+    headers: &Vec<(&'static str, String)>,
+) -> Option<T> {
+    let client = Client::new();
+    let mut request_builder = client.get(endpoint);
 
-    match response {
+    if !headers.is_empty() {
+        let mut request_headers = HeaderMap::new();
+        for (name, value) in headers {
+            request_headers.insert(*name, HeaderValue::from_str(value.as_str()).unwrap());
+        }
+        request_builder = request_builder.headers(request_headers);
+    }
+
+    match request_builder.send().await {
         Ok(response) => {
             if response.status() == StatusCode::OK {
                 let result = response.json::<T>().await;
