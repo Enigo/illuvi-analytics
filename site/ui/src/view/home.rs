@@ -1,4 +1,4 @@
-use crate::utils::{api_utils, navigation_utils};
+use crate::utils::{api_utils, html_utils, navigation_utils};
 use log::error;
 use model::model::collection::CollectionData;
 use yew::prelude::*;
@@ -11,35 +11,42 @@ pub fn home_function_component() -> Html {
     let collections = use_state(|| vec![]);
     {
         let collections = collections.clone();
-        use_effect_with(
-            (), move |_| {
-                navigation_utils::scroll_to_top();
-                wasm_bindgen_futures::spawn_local(async move {
-                    match api_utils::fetch_single_api_response::<Vec<CollectionData>>(
-                        "/collection/collections",
-                    )
-                    .await
-                    {
-                        Ok(fetched_collections) => {
-                            collections.set(fetched_collections);
-                        }
-                        Err(e) => {
-                            error!("{e}")
-                        }
+        use_effect_with((), move |_| {
+            navigation_utils::scroll_to_top();
+            wasm_bindgen_futures::spawn_local(async move {
+                match api_utils::fetch_single_api_response::<Vec<CollectionData>>(
+                    "/collection/collections",
+                )
+                .await
+                {
+                    Ok(fetched_collections) => {
+                        collections.set(fetched_collections);
                     }
-                });
-            },
-        );
+                    Err(e) => {
+                        error!("{e}")
+                    }
+                }
+            });
+        });
     }
 
-    let collections = collections.iter().map(|collection| html! {
+    let collections = collections.iter().map(|collection| {
+        let div = html_utils::create_image_overlay_element();
+        let node = div.clone().into();
+        let onload  = html_utils::get_image_onload_callback(div);
+        html! {
             <div class="col-md-auto col-6 text-center animate__animated animate__fadeInUp animate__slow animate__delay-0.75s">
-                <Link<Route> to={Route::Collection {token_address: collection.address.clone()} }>
-                    <img src={collection.collection_image_url.clone()} class="img-responsive" alt={collection.name.clone()}/>
-                </Link<Route>>
+                <div class="d-flex justify-content-center position-relative">
+                    <Link<Route> to={Route::Collection {token_address: collection.address.clone()} }>
+                        <img src={collection.collection_image_url.clone()} class="img-responsive" alt={collection.name.clone()}
+                        {onload}/>
+                    </Link<Route>>
+                    { Html::VRef(node) }
+                </div>
                 <p class="text-white">{collection.name.clone()}</p>
             </div>
-        }).collect::<Html>();
+        }
+    }).collect::<Html>();
 
     return html! {
         <div class="container-fluid bg-gray vh-100">

@@ -11,25 +11,23 @@ pub fn header() -> Html {
     let collections = use_state(|| vec![]);
     {
         let collections = collections.clone();
-        use_effect_with(
-            (), move |_| {
-                let collections = collections.clone();
-                wasm_bindgen_futures::spawn_local(async move {
-                    match api_utils::fetch_single_api_response::<Vec<CollectionData>>(
-                        "/collection/collections",
-                    )
-                    .await
-                    {
-                        Ok(fetched_collections) => {
-                            collections.set(fetched_collections);
-                        }
-                        Err(e) => {
-                            error!("{e}")
-                        }
+        use_effect_with((), move |_| {
+            let collections = collections.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                match api_utils::fetch_single_api_response::<Vec<CollectionData>>(
+                    "/collection/collections",
+                )
+                .await
+                {
+                    Ok(fetched_collections) => {
+                        collections.set(fetched_collections);
                     }
-                });
-            },
-        );
+                    Err(e) => {
+                        error!("{e}")
+                    }
+                }
+            });
+        });
     }
 
     let collections = collections.iter().map(|collection| html! {

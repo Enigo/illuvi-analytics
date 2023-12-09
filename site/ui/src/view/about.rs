@@ -3,11 +3,9 @@ use yew::prelude::*;
 
 #[function_component(About)]
 pub fn about_function_component() -> Html {
-    use_effect_with(
-        (), |_| {
-            navigation_utils::scroll_to_top();
-        },
-    );
+    use_effect_with((), |_| {
+        navigation_utils::scroll_to_top();
+    });
 
     return html! {
         <section>

@@ -36,31 +36,29 @@ pub fn events_table_function_component(props: &Props) -> Html {
         let event_index = event_index.clone();
         let event_val = *event_index;
         let event_types = event_types.clone();
-        use_effect_with(
-            (page_val, event_val, props.url.clone()), move |_| {
-                event_data.set(None);
-                wasm_bindgen_futures::spawn_local(async move {
-                    match api_utils::fetch_single_api_response::<EventData>(
-                        format!(
-                            "{}&page={}&event={}",
-                            url,
-                            page_val,
-                            &event_types.get(event_val).unwrap_or(&String::from("All"))
-                        )
-                        .as_str(),
+        use_effect_with((page_val, event_val, props.url.clone()), move |_| {
+            event_data.set(None);
+            wasm_bindgen_futures::spawn_local(async move {
+                match api_utils::fetch_single_api_response::<EventData>(
+                    format!(
+                        "{}&page={}&event={}",
+                        url,
+                        page_val,
+                        &event_types.get(event_val).unwrap_or(&String::from("All"))
                     )
-                    .await
-                    {
-                        Ok(fetched_data) => {
-                            event_data.set(Some(fetched_data));
-                        }
-                        Err(e) => {
-                            error!("{e}")
-                        }
+                    .as_str(),
+                )
+                .await
+                {
+                    Ok(fetched_data) => {
+                        event_data.set(Some(fetched_data));
                     }
-                });
-            },
-        );
+                    Err(e) => {
+                        error!("{e}")
+                    }
+                }
+            });
+        });
     }
 
     return html! {

@@ -21,29 +21,27 @@ pub fn collection_mint_function_component(props: &Props) -> Html {
         let mint = mint.clone();
         let page = page.clone();
         let page_val = *page;
-        use_effect_with(
-            (page_val, props.token_address.clone()), move |_| {
-                mint.set(None);
-                wasm_bindgen_futures::spawn_local(async move {
-                    match api_utils::fetch_single_api_response::<MintData>(
-                        format!(
-                            "/mint/mints?token_address={}&page={}",
-                            token_address, page_val
-                        )
-                        .as_str(),
+        use_effect_with((page_val, props.token_address.clone()), move |_| {
+            mint.set(None);
+            wasm_bindgen_futures::spawn_local(async move {
+                match api_utils::fetch_single_api_response::<MintData>(
+                    format!(
+                        "/mint/mints?token_address={}&page={}",
+                        token_address, page_val
                     )
-                    .await
-                    {
-                        Ok(fetched_mint) => {
-                            mint.set(Some(fetched_mint));
-                        }
-                        Err(e) => {
-                            error!("{e}")
-                        }
+                    .as_str(),
+                )
+                .await
+                {
+                    Ok(fetched_mint) => {
+                        mint.set(Some(fetched_mint));
                     }
-                });
-            },
-        );
+                    Err(e) => {
+                        error!("{e}")
+                    }
+                }
+            });
+        });
     }
 
     return html! {

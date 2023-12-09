@@ -19,26 +19,24 @@ pub fn stats_view_function_component(props: &Props) -> Html {
     {
         let token_address = props.token_address.clone();
         let stats = stats.clone();
-        use_effect_with(
-            props.token_address.clone(), move |_| {
-                stats.set(None);
-                navigation_utils::scroll_to_top();
-                wasm_bindgen_futures::spawn_local(async move {
-                    match api_utils::fetch_single_api_response::<StatsData>(
-                        format!("/stat/stats?token_address={}", token_address).as_str(),
-                    )
-                    .await
-                    {
-                        Ok(fetched_mint) => {
-                            stats.set(Some(fetched_mint));
-                        }
-                        Err(e) => {
-                            error!("{e}")
-                        }
+        use_effect_with(props.token_address.clone(), move |_| {
+            stats.set(None);
+            navigation_utils::scroll_to_top();
+            wasm_bindgen_futures::spawn_local(async move {
+                match api_utils::fetch_single_api_response::<StatsData>(
+                    format!("/stat/stats?token_address={}", token_address).as_str(),
+                )
+                .await
+                {
+                    Ok(fetched_mint) => {
+                        stats.set(Some(fetched_mint));
                     }
-                });
-            },
-        );
+                    Err(e) => {
+                        error!("{e}")
+                    }
+                }
+            });
+        });
     }
 
     return match (*stats).as_ref() {

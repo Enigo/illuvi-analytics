@@ -16,26 +16,24 @@ pub fn wallet_function_component(props: &Props) -> Html {
     {
         let wallet = props.wallet.clone();
         let wallet_data = wallet_data.clone();
-        use_effect_with(
-            props.wallet.clone(), move |_| {
-                wallet_data.set(None);
-                navigation_utils::scroll_to_top();
-                wasm_bindgen_futures::spawn_local(async move {
-                    match api_utils::fetch_single_api_response::<WalletData>(
-                        format!("/wallet/wallet?wallet={}", wallet).as_str(),
-                    )
-                    .await
-                    {
-                        Ok(fetched_data) => {
-                            wallet_data.set(Some(fetched_data));
-                        }
-                        Err(e) => {
-                            error!("{e}")
-                        }
+        use_effect_with(props.wallet.clone(), move |_| {
+            wallet_data.set(None);
+            navigation_utils::scroll_to_top();
+            wasm_bindgen_futures::spawn_local(async move {
+                match api_utils::fetch_single_api_response::<WalletData>(
+                    format!("/wallet/wallet?wallet={}", wallet).as_str(),
+                )
+                .await
+                {
+                    Ok(fetched_data) => {
+                        wallet_data.set(Some(fetched_data));
                     }
-                });
-            },
-        );
+                    Err(e) => {
+                        error!("{e}")
+                    }
+                }
+            });
+        });
     }
 
     return match (*wallet_data).as_ref() {

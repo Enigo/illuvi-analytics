@@ -28,6 +28,32 @@ body {
     filter: grayscale(100%);
 }
 
+.loading-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background-color: rgba(184, 184, 184, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.3s ease, transform 1.5s ease-in-out;
+    animation: colorPulse 2s infinite;
+}
+
+@keyframes colorPulse {
+    0% {
+        background-color: rgba(184, 184, 184, 0.8);
+    }
+    50% {
+        background-color: rgba(218, 218, 218, 0.8)
+    }
+    100% {
+        background-color: rgba(184, 184, 184, 0.8);
+    }
+}
+
 .img-responsive {
     max-width: 100%;
     width: 250px;

@@ -22,7 +22,8 @@ pub fn asset_function_component(props: &Props) -> Html {
         let token_id = props.token_id;
         let asset = asset.clone();
         use_effect_with(
-            (props.token_id.clone(), props.token_address.clone()), move |_| {
+            (props.token_id.clone(), props.token_address.clone()),
+            move |_| {
                 asset.set(None);
                 navigation_utils::scroll_to_top();
                 wasm_bindgen_futures::spawn_local(async move {

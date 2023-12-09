@@ -17,25 +17,23 @@ pub fn collection_mint_function_component(props: &Props) -> Html {
     {
         let token_address = props.token_address.clone();
         let vitals = vitals.clone();
-        use_effect_with(
-            props.token_address.clone(), move |_| {
-                vitals.set(None);
-                wasm_bindgen_futures::spawn_local(async move {
-                    match api_utils::fetch_single_api_response::<VitalsData>(
-                        format!("/stat/vitals?token_address={}", token_address).as_str(),
-                    )
-                    .await
-                    {
-                        Ok(fetched_data) => {
-                            vitals.set(Some(fetched_data));
-                        }
-                        Err(e) => {
-                            error!("{e}")
-                        }
+        use_effect_with(props.token_address.clone(), move |_| {
+            vitals.set(None);
+            wasm_bindgen_futures::spawn_local(async move {
+                match api_utils::fetch_single_api_response::<VitalsData>(
+                    format!("/stat/vitals?token_address={}", token_address).as_str(),
+                )
+                .await
+                {
+                    Ok(fetched_data) => {
+                        vitals.set(Some(fetched_data));
                     }
-                });
-            },
-        );
+                    Err(e) => {
+                        error!("{e}")
+                    }
+                }
+            });
+        });
     }
 
     return match (*vitals).as_ref() {
