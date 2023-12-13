@@ -126,16 +126,17 @@ pub async fn fetch_all_lands_with_no_price_or_currency(
 pub async fn update_d1sk_price(pool: &Pool<Postgres>) {
     match query("UPDATE mint SET price =
         CASE
-            WHEN asset.metadata->>'Alpha' = 'true' AND asset.metadata->>'Wave' = '1' AND asset.metadata->>'Type' = 'Standard D1sk' THEN 0.025
-            WHEN asset.metadata->>'Alpha' = 'true' AND asset.metadata->>'Wave' = '1' AND asset.metadata->>'Type' = 'Mega D1sk' THEN 0.124
-            WHEN asset.metadata->>'Alpha' = 'false' AND asset.metadata->>'Wave' = '1' AND asset.metadata->>'Type' = 'Standard D1sk' AND (asset.metadata->>'Promotion') IS NULL THEN 0.005
-            WHEN asset.metadata->>'Alpha' = 'false' AND asset.metadata->>'Wave' = '1' AND asset.metadata->>'Type' = 'Mega D1sk' AND (asset.metadata->>'Promotion') IS NULL THEN 0.0249
-            WHEN asset.metadata->>'Alpha' = 'true' AND asset.metadata->>'Wave' = '2' AND asset.metadata->>'Type' = 'Standard D1sk' THEN 0.00601
-            WHEN asset.metadata->>'Alpha' = 'true' AND asset.metadata->>'Wave' = '2' AND asset.metadata->>'Type' = 'Mega D1sk' THEN 0.05401
-            WHEN asset.metadata->>'Alpha' = 'false' AND asset.metadata->>'Wave' = '2' AND asset.metadata->>'Type' = 'Standard D1sk' AND (asset.metadata->>'Promotion') IS NULL THEN 0.00301
-            WHEN asset.metadata->>'Alpha' = 'false' AND asset.metadata->>'Wave' = '2' AND asset.metadata->>'Type' = 'Mega D1sk' AND (asset.metadata->>'Promotion') IS NULL THEN 0.01801
-            WHEN asset.metadata->>'Alpha' = 'false' AND asset.metadata->>'Type' = 'Standard D1sk' AND asset.metadata->>'Promotion' = 'GameStop' THEN 0.029
-            END,
+            WHEN asset.attribute = 'Standard D1sk Alpha Wave 1' THEN 0.025
+            WHEN asset.attribute = 'Mega D1sk Alpha Wave 1' THEN 0.124
+            WHEN asset.attribute = 'Standard D1sk Wave 1' THEN 0.005
+            WHEN asset.attribute = 'Mega D1sk Wave 1' THEN 0.0249
+            WHEN asset.attribute = 'Standard D1sk Alpha Wave 2' THEN 0.00601
+            WHEN asset.attribute = 'Mega D1sk Alpha Wave 2' THEN 0.05401
+            WHEN asset.attribute = 'Standard D1sk Wave 2' THEN 0.00301
+            WHEN asset.attribute = 'Mega D1sk Wave 2' THEN 0.01801
+            WHEN asset.attribute = 'GameStop Promo D1SK Wave 1' THEN 0.029
+            WHEN asset.attribute = 'Team Liquid Promo D1SK Wave 2' THEN 0.0184023
+        END,
         currency='ETH'
     FROM asset
     WHERE mint.token_id = asset.token_id and mint.token_address = asset.token_address
