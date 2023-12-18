@@ -19,7 +19,7 @@ pub async fn get_all_mints_for_token_address(
         }
     };
 
-    let result: Option<MintData> = match query_as::<_, MintDb>(
+    return match query_as::<_, MintDb>(
         "select m.token_id, m.token_address, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url from mint m
                                                     join asset a on m.token_id = a.token_id and m.token_address = a.token_address
                                            where m.token_address=$1
@@ -27,10 +27,10 @@ pub async fn get_all_mints_for_token_address(
                                            limit 50
                                            offset $2",
     )
-    .bind(token_address)
-    .bind((page - 1) * 50)
-    .fetch_all(pool)
-    .await
+        .bind(token_address)
+        .bind((page - 1) * 50)
+        .fetch_all(pool)
+        .await
     {
         Ok(res) => {
             let mints = res.into_iter().map(|mint| mint.into()).collect();
@@ -41,8 +41,6 @@ pub async fn get_all_mints_for_token_address(
             None
         }
     };
-
-    return result;
 }
 
 // https://github.com/launchbadge/sqlx/discussions/1886

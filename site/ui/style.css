@@ -84,7 +84,6 @@ body {
     display: flex;
     justify-content: center;
     align-items: start;
-    height: 100vh;
 }
 
 .spinner {
@@ -101,3 +100,27 @@ body {
     100% { transform: rotate(360deg); }
 }
 /*Spinner*/
+
+.dropdown-menu .dropdown-item:hover {
+    background-color: transparent;
+}
+
+.max-vh-90 {
+    max-height: 90vh;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #363636;
+    -webkit-box-shadow: inset 0 0 6px rgba(200, 200, 200, 1);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: white;
+    -webkit-box-shadow: inset 0 0 6px rgba(184, 184, 184, 1);
+}

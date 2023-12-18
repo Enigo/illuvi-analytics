@@ -5,6 +5,7 @@ use yew_router::prelude::*;
 
 use crate::route::Route;
 use crate::utils::api_utils;
+use crate::view::search::Search;
 
 #[function_component(Header)]
 pub fn header() -> Html {
@@ -67,6 +68,7 @@ pub fn header() -> Html {
                             </li>
                         </ul>
                     </div>
+                    { html! { <Search /> } }
                 </div>
             </nav>
         </header>

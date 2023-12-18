@@ -1,7 +1,7 @@
+use crate::model::asset::AssetContentData;
 use crate::model::price::Price;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use crate::model::asset::AssetContentData;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct SingleTransaction {

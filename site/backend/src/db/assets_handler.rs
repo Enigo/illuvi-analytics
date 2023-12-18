@@ -4,6 +4,7 @@ use model::model::asset::{
     AccessoriesAssetData, AssetContentData, AssetData, CommonAssetData, CommonOrderData,
     D1skAssetData, IlluvitarAssetData, LandAssetData,
 };
+use model::model::search::SearchData;
 use model::model::transaction::SingleTransaction;
 use sqlx::{query, query_as, FromRow, Pool, Postgres, Row};
 
@@ -13,6 +14,30 @@ const D1SK: &str = "0xc1f1da534e227489d617cd742481fd5a23f6a003";
 const LAND: &str = "0x9e0d99b864e1ac12565125c5a82b59adea5a09cd";
 const ILLUVITAR: &str = "0x8cceea8cfb0f8670f4de3a6cd2152925605d19a8";
 const ACCESSORIES: &str = "0x844a2a2b4c139815c1da4bdd447ab558bb9a7d24";
+
+pub async fn get_search_results(pool: &Pool<Postgres>, search: &String) -> Option<SearchData> {
+    return match query_as::<_, AssetContentDb>(
+        "select token_id, token_address, metadata->>'name' as name, metadata->>'image_url' as image_url from asset
+         where  ($1~'^\\d+$' and token_id::text like '%' || $1 || '%') or lower(metadata->>'name') like '%' || $1 || '%'
+         order by 1, 3
+         limit 20",
+    )
+        .bind(search.to_lowercase())
+        .fetch_all(pool)
+        .await
+    {
+        Ok(res) => {
+            let asset_content_data = res.into_iter().map(|asset| asset.into()).collect();
+            Some(SearchData {
+                asset_content_data
+            })
+        }
+        Err(e) => {
+            error!("Error fetching data: {e}");
+            None
+        }
+    };
+}
 
 pub async fn get_asset_for_token_address_and_token_id(
     pool: &Pool<Postgres>,

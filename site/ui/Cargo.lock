@@ -837,6 +837,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "dotenvy_macro",
+ "gloo-timers 0.3.0",
  "log",
  "model",
  "reqwest",

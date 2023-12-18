@@ -6,4 +6,5 @@ pub mod footer;
 pub mod header;
 pub mod home;
 pub mod loading;
+mod search;
 pub mod wallet;

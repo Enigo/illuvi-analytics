@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use crate::model::price::Price;
 use crate::model::transaction::SingleTransaction;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct AssetData {
@@ -82,7 +82,6 @@ pub struct CommonAssetData {
     pub name: String,
     pub image_url: String,
 }
-
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct CommonOrderData {
