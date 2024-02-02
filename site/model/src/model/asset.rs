@@ -8,6 +8,8 @@ pub struct AssetData {
     pub d1sk: Option<D1skAssetData>,
     pub accessories: Option<AccessoriesAssetData>,
     pub illuvitar: Option<IlluvitarAssetData>,
+    pub blueprint: Option<BlueprintAssetData>,
+    pub event: Option<EventAssetData>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -22,6 +24,7 @@ pub struct LandAssetData {
     pub hydrogen: String,
     pub hyperion: String,
     pub landmark: String,
+    pub total_discovered_blueprints: i64,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -71,6 +74,25 @@ pub struct IlluvitarAssetData {
     pub origin_illuvitar: Option<AssetContentData>,
     pub accessorised_illuvitar: Option<AssetContentData>,
     pub accessories: Vec<AssetContentData>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
+pub struct BlueprintAssetData {
+    pub common_asset_data: CommonAssetData,
+    pub common_order_data: Option<CommonOrderData>,
+    pub item_tier: String,
+    pub item_stage: String,
+    pub item_type: String,
+    pub discovered_by: String,
+    pub land: Option<AssetContentData>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
+pub struct EventAssetData {
+    pub common_asset_data: CommonAssetData,
+    pub common_order_data: Option<CommonOrderData>,
+    pub line: String,
+    pub promotion: String,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]

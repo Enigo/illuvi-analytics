@@ -128,3 +128,63 @@ pub fn get_asset_link(token_address: &String, token_id: i32, image_url: &String)
         </Link<Route>>
     }
 }
+
+pub fn get_li_with_span(text: &String, number_value: &i64) -> Html {
+    html! {
+      <li class="list-group-item bg-dark text-white fs-5">
+          <div class="row justify-content-between">
+            <div class="col-12 col-md-auto mb-2 mb-md-0">
+                <span class="badge bg-primary">{text}</span>
+            </div>
+            <div class="col-12 col-md-auto">
+                { format_number_with_spaces(number_value) }
+            </div>
+          </div>
+      </li>
+    }
+}
+
+pub fn get_li_with_span_and_text(text: &String, text_value: &String) -> Html {
+    html! {
+      <li class="list-group-item bg-dark text-white fs-5">
+          <div class="row justify-content-between">
+            <div class="col-12 col-md-auto mb-2 mb-md-0">
+                <span class="badge bg-primary">{text}</span>
+            </div>
+            <div class="col-12 col-md-auto">
+                { text_value }
+            </div>
+          </div>
+      </li>
+    }
+}
+
+pub fn get_li_with_span_and_price(text: &String, price: &Price) -> Html {
+    html! {
+      <li class="list-group-item bg-dark text-white fs-5">
+          <div class="row justify-content-between">
+            <div class="col-12 col-md-auto mb-2 mb-md-0">
+                <span class="badge bg-primary">{text}</span>
+            </div>
+            <div class="col-12 col-md-auto">
+                { format_price(price) }
+            </div>
+          </div>
+      </li>
+    }
+}
+
+pub fn get_li_with_span_and_wallet_link(wallet_link: Html, text_value: &String) -> Html {
+    html! {
+      <li class="list-group-item bg-dark text-white fs-5">
+          <div class="row justify-content-center align-items-center">
+            <div class="col-auto mb-2 mb-md-0">
+                { wallet_link }
+            </div>
+            <div class="col-auto">
+                { text_value }
+            </div>
+          </div>
+      </li>
+    }
+}

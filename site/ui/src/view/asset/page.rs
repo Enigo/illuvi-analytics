@@ -1,7 +1,8 @@
 use crate::utils::{api_utils, navigation_utils};
 use crate::view::asset::events::AssetEvents;
 use crate::view::asset::{
-    accessories::AssetAccessories, d1sk::AssetD1sk, illuvitar::AssetIlluvitar, land::AssetLand,
+    accessories::AssetAccessories, blueprint::AssetBlueprint, d1sk::AssetD1sk, event::AssetEvent,
+    illuvitar::AssetIlluvitar, land::AssetLand,
 };
 use crate::view::loading::LoadingSpinnerGray;
 use log::error;
@@ -61,6 +62,11 @@ pub fn asset_function_component(props: &Props) -> Html {
             } else if asset.illuvitar.is_some() {
                 asset_html =
                     html! {<AssetIlluvitar illuvitar={asset.illuvitar.clone().unwrap()} />};
+            } else if asset.blueprint.is_some() {
+                asset_html =
+                    html! {<AssetBlueprint blueprint={asset.blueprint.clone().unwrap()} />};
+            } else if asset.event.is_some() {
+                asset_html = html! {<AssetEvent event={asset.event.clone().unwrap()} />};
             }
 
             html! {

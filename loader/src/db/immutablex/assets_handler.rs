@@ -25,6 +25,11 @@ impl Persistable<Asset> for AssetSaver {
                 warn!("Missing metadata for {}", res.token_id)
             } else {
                 metadata_values = metadata.clone().unwrap();
+                // one of the collections has a "wrong" field name
+                // a bug was raised
+                if let Some(value) = metadata_values.remove("image") {
+                    metadata_values.insert("image_url".to_string(), value);
+                }
             }
             builder
                 .push_bind(res.token_id.parse::<i32>().unwrap())

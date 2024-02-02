@@ -1,4 +1,4 @@
-use crate::utils::formatting_utils::{format_number_with_spaces, format_price};
+use crate::utils::formatting_utils::format_price;
 use crate::utils::{api_utils, formatting_utils, navigation_utils};
 use crate::view::common::{no_data::NoData, transactions_view::TransactionsView};
 use crate::view::loading::LoadingSpinnerGray;
@@ -68,7 +68,7 @@ fn stats_view(stats_data: &StatsData, token_address: &String) -> Html {
 fn totals(stats_data: &StatsData, token_address: &String) -> Html {
     html!(
         <div class="container-fluid p-5 bg-gray">
-            <div class="container p-0">
+            <div class="container">
                 { render_totals(&stats_data.total) }
                 { render_most(stats_data, token_address) }
             </div>
@@ -105,23 +105,17 @@ fn render_totals(total: &StatsDataTotal) -> Html {
             <p class="text-white fs-3 mb-2">{"Totals"}</p>
             <div class="col-md-4 p-0 m-2 border rounded bg-dark">
                <ul class="list-group list-group-flush p-2">
-                  <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                      <span class="badge bg-primary">{"Assets"}</span>{ format_number_with_spaces(&total.assets_minted) }</li>
-                  <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                      <span class="badge bg-primary">{"Burnt"}</span>{ format_number_with_spaces(&total.assets_burnt) }</li>
-                  <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                      <span class="badge bg-primary">{"Burn Rate"}</span>{ format!("{:.2}%", burn_rate) }</li>
+                  { formatting_utils::get_li_with_span(&String::from("Assets"), &total.assets_minted) }
+                  { formatting_utils::get_li_with_span(&String::from("Burnt"), &total.assets_burnt) }
+                  { formatting_utils::get_li_with_span_and_text(&String::from("Burn Rate"), &format!("{:.2}%", burn_rate) )}
                </ul>
             </div>
             <div class="col-md-4 p-0 m-2 border rounded bg-dark">
                <ul class="list-group list-group-flush p-2">
-                  <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                      <span class="badge bg-primary">{"Transfers"}</span>{ &format_number_with_spaces(&total.transfers) }</li>
-                  <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                      <span class="badge bg-primary">{"Trades"}</span>{ &format_number_with_spaces(&total.trades) }</li>
+                  { formatting_utils::get_li_with_span(&String::from("Transfers"), &total.transfers) }
+                  { formatting_utils::get_li_with_span(&String::from("Trades"), &total.trades) }
                   if let Some(sales_in_usd) = sales_in_usd {
-                      <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                      <span class="badge bg-primary">{format!("Sell Volume in {}", sales_in_usd.currency)}</span><span>{ format_price(sales_in_usd) }</span></li>
+                      { formatting_utils::get_li_with_span_and_price(&format!("Sell Volume in {}", sales_in_usd.currency), &sales_in_usd) }
                   }
                </ul>
             </div>
@@ -191,10 +185,7 @@ fn render_trades_amount(stats_data: &StatsData) -> Html {
                             { trades.iter().rev().map(|trade| {
                                 total_per_status += trade.count;
                                 html!(
-                                  <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                                    <span class="badge bg-primary">{&trade.buy_currency}</span>
-                                    {formatting_utils::format_number_with_spaces(&trade.count)}
-                                  </li>
+                                    formatting_utils::get_li_with_span(&trade.buy_currency, &trade.count)
                                 )
                             }).collect::<Html>() }
                           </ul>
@@ -213,11 +204,11 @@ fn render_cheapest_and_most_expensive_trades(
 ) -> Html {
     let trades_by_attribute = &stats_data.cheapest_and_most_expensive_trades_by_attribute;
     return html! {
-        <div class="row my-3 p-3 text-center justify-content-center animate__animated animate__fadeIn animate__faster">
+        <div class="row my-3 text-center justify-content-center animate__animated animate__fadeIn animate__faster">
             <p class="text-white fs-3 mb-2">{"Cheapest | Most Expensive Trades"}</p>
             { trades_by_attribute.iter().map(|(attribute, trades)| {
                 html! {
-                     <div class="row text-center mb-5 p-3 bg-dark border rounded">
+                     <div class="row text-center mb-5 p-3 justify-content-center bg-dark border rounded">
                         <p class="text-white fs-4 mb-2">{attribute}</p>
                         {
                             html!(
@@ -262,14 +253,7 @@ fn get_single_most_wallets_view(
           <ul class="list-group list-group-flush p-2">
             { most_data.iter().map(|data| {
                 html! {
-                    <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                        <div class="col-md text-end me-2">
-                            {formatting_utils::format_wallet_link(&data.wallet)}
-                        </div>
-                        <div class="col-md text-start ms-2">
-                            {format!("{} times", data.count)}
-                        </div>
-                    </li>
+                    { formatting_utils::get_li_with_span_and_wallet_link(formatting_utils::format_wallet_link(&data.wallet), &format!("{} times", data.count)) }
                 }
             }).collect::<Html>() }
           </ul>

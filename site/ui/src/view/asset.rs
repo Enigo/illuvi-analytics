@@ -1,5 +1,7 @@
 mod accessories;
+mod blueprint;
 mod d1sk;
+mod event;
 mod events;
 mod illuvitar;
 mod image;

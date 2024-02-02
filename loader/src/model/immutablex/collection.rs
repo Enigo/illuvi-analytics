@@ -1,24 +1,7 @@
-use crate::model::immutablex::shared::PaginatedApi;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Collection {
-    pub result: Vec<TheResult>,
-    pub cursor: String,
-}
-
-impl PaginatedApi for Collection {
-    fn get_cursor(&self) -> String {
-        self.cursor.clone()
-    }
-
-    fn has_results(&self) -> bool {
-        !self.result.is_empty()
-    }
-}
-
-#[derive(Deserialize, Debug)]
-pub struct TheResult {
     pub address: String,
     pub name: String,
     pub description: String,

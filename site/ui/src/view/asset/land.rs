@@ -49,6 +49,7 @@ fn intro(asset: &LandAssetData) -> Html {
                           {"Owned by "}
                           {formatting_utils::format_wallet_link(&asset.common_asset_data.current_owner)}
                       </p>
+                      <p class="text-white fs-4 mb-2"> {format!("Blueprints Discovered {}", asset.total_discovered_blueprints)} </p>
                       { elements(&asset) }
                       { fuels(&asset) }
                     </div>

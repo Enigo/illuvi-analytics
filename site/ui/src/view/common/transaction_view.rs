@@ -14,7 +14,7 @@ pub fn single_transaction_view(props: &ViewProps) -> Html {
     let transaction = &props.trade;
     let transaction_id = transaction.transaction_id;
     html!(
-          <div class={format!("col-md mb-2 mx-2 p-0 bg-dark {}", if props.render_border_end {"column_with_end_border"} else {""})}>
+          <div class={format!("col-md-4 mb-2 p-0 bg-dark {}", if props.render_border_end {"column_with_end_border"} else {""})}>
               <p class="fs-5 text-white m-0 py-2">{transaction.name.clone()}</p>
               <div class="justify-content-center align-items-center py-2">
                 {formatting_utils::get_asset_link(&props.token_address, transaction.token_id, &transaction.image_url)}

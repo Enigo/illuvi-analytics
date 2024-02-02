@@ -35,7 +35,7 @@ pub fn home_function_component() -> Html {
         let node = div.clone().into();
         let onload  = html_utils::get_image_onload_callback(div);
         html! {
-            <div class="col-md-auto col-6 text-center animate__animated animate__fadeInUp animate__slow animate__delay-0.75s">
+            <div class="col-md-4 col-4 text-center animate__animated animate__fadeInUp animate__slow animate__delay-0.75s">
                 <div class="d-flex justify-content-center position-relative">
                     <Link<Route> to={Route::Collection {token_address: collection.address.clone()} }>
                         <img src={collection.collection_image_url.clone()} class="img-responsive" alt={collection.name.clone()}

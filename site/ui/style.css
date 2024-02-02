@@ -30,8 +30,8 @@ body {
 
 .loading-overlay {
     position: absolute;
-    width: 100%;
-    height: 100%;
+    width: 250px;
+    height: 250px;
     pointer-events: none;
     background-color: rgba(184, 184, 184, 0.8);
     display: flex;
@@ -61,7 +61,8 @@ body {
 }
 
 @media (max-width: 576px) {
-    .img-responsive {
+    .img-responsive,
+    .loading-overlay {
         width: 110px;
         height: 110px;
     }

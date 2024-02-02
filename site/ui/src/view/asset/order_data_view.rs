@@ -32,19 +32,13 @@ pub fn asset_order_data_function_component(props: &Props) -> Html {
             <div class="col-md-4 p-0 border rounded bg-dark">
                <ul class="list-group list-group-flush p-2">
                 if {listed} {
-                  <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                    <span class="badge bg-primary">{"Price Rank"}</span>{ formatting_utils::format_number_with_spaces(&common_order_data.listed_index.unwrap()) }
-                  </li>
+                  {formatting_utils::get_li_with_span(&String::from("Price Rank"), &common_order_data.listed_index.unwrap())}
                 }
-                <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                  <span class="badge bg-primary">{"Listed"}</span>{ formatting_utils::format_number_with_spaces(&common_order_data.active_orders) }
-                </li>
-                <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                  <span class="badge bg-primary">{"Total trades"}</span>{ formatting_utils::format_number_with_spaces(&common_order_data.total_filled_orders) }
-                </li>
+                {formatting_utils::get_li_with_span(&String::from("Listed"), &common_order_data.active_orders)}
+                {formatting_utils::get_li_with_span(&String::from("Total trades"), &common_order_data.total_filled_orders)}
                </ul>
             </div>
-            <div class="row my-4 p-3 border rounded bg-dark">
+            <div class="row my-4 p-3 justify-content-center border rounded bg-dark">
                 <p class="text-white fs-3">{"Cheapest listed"}</p>
                 {
                     html!(
@@ -52,7 +46,7 @@ pub fn asset_order_data_function_component(props: &Props) -> Html {
                     )
                 }
             </div>
-            <div class="row p-3 border rounded bg-dark">
+            <div class="row p-3 justify-content-center border rounded bg-dark">
                 <p class="text-white fs-3">{"Last trades"}</p>
                 {
                     html!(

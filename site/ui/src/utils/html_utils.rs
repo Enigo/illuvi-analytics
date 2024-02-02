@@ -6,13 +6,8 @@ pub fn get_image_onload_callback(div: Element) -> Callback<Event> {
 }
 
 pub fn create_image_overlay_element() -> Element {
-    return create_image_overlay_with_width_element(String::from("w-100"));
-}
-
-fn create_image_overlay_with_width_element(width: String) -> Element {
     let div = create_div_element();
-    div.set_attribute("class", format!("loading-overlay {}", width).as_str())
-        .unwrap();
+    div.set_attribute("class", "loading-overlay").unwrap();
     return div;
 }
 

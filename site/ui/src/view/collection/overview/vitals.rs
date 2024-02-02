@@ -1,4 +1,3 @@
-use crate::utils::formatting_utils::{format_number_with_spaces, format_price};
 use crate::utils::{api_utils, formatting_utils};
 use crate::view::common::{no_data::NoData, transactions_view::TransactionsView};
 use crate::view::loading::LoadingSpinnerGray;
@@ -89,18 +88,15 @@ fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
         <div class="row text-center justify-content-center">
             <div class="col-md-4 p-0 m-2 border rounded bg-dark">
                <ul class="list-group list-group-flush p-2">
-                  <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                      <span class="badge bg-primary">{"Assets"}</span>{ format_number_with_spaces(&vitals_data.total_assets) }</li>
-                  <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                      <span class="badge bg-primary">{"Owners"}</span>{ format_number_with_spaces(&vitals_data.unique_holders) }</li>
+                  { formatting_utils::get_li_with_span(&String::from("Assets"), &vitals_data.total_assets) }
+                  { formatting_utils::get_li_with_span(&String::from("Owners"), &vitals_data.unique_holders) }
                </ul>
             </div>
             <div class="col-md-4 p-0 m-2 border rounded bg-dark">
                <ul class="list-group list-group-flush p-2">
                   { trades_volume.iter().map(|price| {
                       html!(
-                          <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                          <span class="badge bg-primary">{format!("Sell Volume in {}", price.currency)}</span><span>{ format_price(price) }</span></li>
+                          { formatting_utils::get_li_with_span_and_price(&{format!("Sell Volume in {}", price.currency)}, price) }
                       )
                   }).collect::<Html>() }
                </ul>
@@ -110,7 +106,7 @@ fn vitals_view(vitals_data: &VitalsData, token_address: &String) -> Html {
 
     return html! {
         <div class="container-fluid p-5 bg-gray">
-            <div class="container p-0">
+            <div class="container">
                 { totals_html }
                 { last_trades_html }
                 { attribute_data_html }
@@ -144,16 +140,11 @@ fn get_single_attribute_view(data: &AttributeData) -> Html {
     html!(
       <div class="col-md-4 p-0 border rounded bg-dark">
          <ul class="list-group list-group-flush p-2">
-            <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                <span class="badge bg-primary">{"Listed"}</span>{ format_number_with_spaces(&data.active_orders) }</li>
-            <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                <span class="badge bg-primary">{"Listed Rate"}</span>{ format!("{:.2}%", listed_rate) }</li>
-            <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                <span class="badge bg-primary">{"Minted"}</span>{ format_number_with_spaces(&minted_burnt.total_minted) }</li>
-            <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                <span class="badge bg-primary">{"Burnt"}</span> { format_number_with_spaces(&minted_burnt.total_burnt) }</li>
-            <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                <span class="badge bg-primary">{"Burn Rate"}</span>{ format!("{:.2}%", burn_rate) }</li>
+            { formatting_utils::get_li_with_span(&String::from("Listed"), &data.active_orders) }
+            { formatting_utils::get_li_with_span_and_text(&String::from("Listed Rate"), &format!("{:.2}%", listed_rate)) }
+            { formatting_utils::get_li_with_span(&String::from("Minted"), &minted_burnt.total_minted) }
+            { formatting_utils::get_li_with_span(&String::from("Burnt"), &minted_burnt.total_burnt) }
+            { formatting_utils::get_li_with_span_and_text(&String::from("Burn Rate"), &format!("{:.2}%", burn_rate)) }
          </ul>
       </div>
     )

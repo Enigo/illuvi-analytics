@@ -1,5 +1,4 @@
-use crate::utils::formatting_utils::{format_number_with_spaces, format_price};
-use crate::utils::{api_utils, navigation_utils};
+use crate::utils::{api_utils, formatting_utils, navigation_utils};
 use crate::view::loading::LoadingSpinnerGray;
 use log::error;
 use model::model::wallet::{TotalPerCollectionData, WalletData, WalletMoneyData};
@@ -11,7 +10,7 @@ pub struct Props {
 }
 
 #[function_component(WalletDataView)]
-pub fn wallet_function_component(props: &Props) -> Html {
+pub fn wallet_data_view_function_component(props: &Props) -> Html {
     let wallet_data = use_state(|| None);
     {
         let wallet = props.wallet.clone();
@@ -80,14 +79,10 @@ fn wallet_mint_view(minted_per_collection_wallet: &Vec<TotalPerCollectionData>) 
     html! {
        <div class="col-md-3 p-0 m-2 border rounded bg-dark">
            <ul class="list-group list-group-flush p-2">
-            <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                <span class="badge bg-primary">{"Total minted"}</span>{ &format_number_with_spaces(&total_per_wallet_sum) }</li>
+            { formatting_utils::get_li_with_span(&String::from("Total minted"), &total_per_wallet_sum) }
             { minted_per_collection_wallet.iter().map(|mint|
                 html!(
-                    <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                        <span class="badge bg-primary">{mint.name.clone()}</span>
-                            { &format_number_with_spaces(&mint.total_per_wallet) }
-                    </li>
+                     formatting_utils::get_li_with_span(&mint.name.clone(), &mint.total_per_wallet)
                 )).collect::<Html>()
             }
            </ul>
@@ -104,14 +99,10 @@ fn wallet_asset_view(owned_per_collection_wallet: &Vec<TotalPerCollectionData>) 
     html! {
        <div class="col-md-3 p-0 m-2 border rounded bg-dark">
            <ul class="list-group list-group-flush p-2">
-            <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                <span class="badge bg-primary">{"Owned"}</span>{ &format_number_with_spaces(&total_per_wallet_sum) }</li>
+            { formatting_utils::get_li_with_span(&String::from("Owned"), &total_per_wallet_sum) }
             { owned_per_collection_wallet.iter().map(|asset|
                 html!(
-                    <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                        <span class="badge bg-primary">{asset.name.clone()}</span>
-                            { &format_number_with_spaces(&asset.total_per_wallet) }
-                    </li>
+                     formatting_utils::get_li_with_span(&asset.name.clone(), &asset.total_per_wallet)
                 )).collect::<Html>()
             }
            </ul>
@@ -123,16 +114,11 @@ fn wallet_money_view(money_data: &WalletMoneyData) -> Html {
     html! {
        <div class="col-md-3 p-0 m-2 border rounded bg-dark">
            <ul class="list-group list-group-flush p-2">
-            <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                <span class="badge bg-primary">{"Total spent on mint"}</span><span>{ format_price(&money_data.mint_spend_usd) }</span></li>
-            <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                <span class="badge bg-primary">{"Total bought"}</span><span>{ format_price(&money_data.total_buy_usd) }</span></li>
-            <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                <span class="badge bg-primary">{"Total sold"}</span><span>{ format_price(&money_data.total_sell_usd) }</span></li>
-            <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                <span class="badge bg-primary">{"Total on sale"}</span><span>{ format_price(&money_data.total_active_usd) }</span></li>
-            <li class="list-group-item bg-dark text-white fs-5 d-flex justify-content-between align-items-center w-100">
-                <span class="badge bg-primary">{"Listed"}</span><span>{ format_number_with_spaces(&money_data.total_active) }</span></li>
+            { formatting_utils::get_li_with_span_and_price(&String::from("Total spent on mint"), &money_data.mint_spend_usd) }
+            { formatting_utils::get_li_with_span_and_price(&String::from("Total bought"), &money_data.total_buy_usd) }
+            { formatting_utils::get_li_with_span_and_price(&String::from("Total sold"), &money_data.total_sell_usd) }
+            { formatting_utils::get_li_with_span_and_price(&String::from("Total on sale"), &money_data.total_active_usd) }
+            { formatting_utils::get_li_with_span(&String::from("Listed"), &money_data.total_active) }
            </ul>
        </div>
     }
