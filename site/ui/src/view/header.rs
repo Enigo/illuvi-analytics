@@ -61,11 +61,6 @@ pub fn header() -> Html {
                      <div class="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul class="navbar-nav">
                             { collections }
-                            <li class="nav-item">
-                                <Link<Route> to={ Route::About } classes="nav-link">
-                                    { "About" }
-                                </Link<Route>>
-                            </li>
                         </ul>
                     </div>
                     { html! { <Search /> } }
