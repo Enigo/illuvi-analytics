@@ -56,7 +56,6 @@ pub struct TakerFees {
 
 #[derive(Deserialize, Debug)]
 pub struct SingleOrder {
-    pub order_id: i32,
     #[serde(rename = "user")]
     pub wallet: String,
     pub maker_fees: MakerFees,

@@ -470,7 +470,7 @@ async fn get_blueprint_asset(
         query_common_order_data(pool, token_address, token_id, &match_part).await;
 
     return match query_as::<_, BlueprintAssetDb>(
-        "select metadata->>'Item Tier' as item_tier, metadata->>'Item Stage' as item_stage, metadata->>'Item Type' as item_type,
+        "select metadata->>'Item Tier' as item_tier, metadata->>'Item Type' as item_type,
                   metadata->>'Discovered By' as discovered_by
                   from asset where token_address=$1 and token_id=$2",
     )
@@ -485,7 +485,6 @@ async fn get_blueprint_asset(
                     common_asset_data,
                     common_order_data,
                     item_tier: result.item_tier,
-                    item_stage: result.item_stage,
                     item_type: result.item_type,
                     discovered_by: result.discovered_by,
                     land,
@@ -702,7 +701,6 @@ struct IlluvitarAssetDb {
 #[derive(FromRow)]
 struct BlueprintAssetDb {
     item_tier: String,
-    item_stage: String,
     item_type: String,
     discovered_by: String,
 }

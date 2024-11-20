@@ -40,7 +40,6 @@ fn intro(asset: &BlueprintAssetData) -> Html {
                     { html! { <AssetImage name={name.clone()} {image_url} {burned}/> } }
                     <div class="bg-dark p-3 rounded border border-2 border-dark my-3">
                       <p class="text-white fs-4 mb-2">{format!("Tier {}", asset.item_tier.clone())}</p>
-                      <p class="text-white fs-4 mb-2">{format!("Stage {}", asset.item_stage.clone())}</p>
                       <p class="text-white fs-4 mb-2">{format!("Type {}", asset.item_type.clone())}</p>
                       <p class="text-white fs-4 mb-2">{format!("Discovered by {}", asset.discovered_by.clone())}</p>
                     </div>

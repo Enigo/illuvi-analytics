@@ -81,7 +81,6 @@ pub struct BlueprintAssetData {
     pub common_asset_data: CommonAssetData,
     pub common_order_data: Option<CommonOrderData>,
     pub item_tier: String,
-    pub item_stage: String,
     pub item_type: String,
     pub discovered_by: String,
     pub land: Option<AssetContentData>,

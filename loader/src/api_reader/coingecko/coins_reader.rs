@@ -7,7 +7,6 @@ use futures::StreamExt;
 use log::{info, warn};
 use sqlx::types::chrono::NaiveDate;
 use sqlx::{Pool, Postgres};
-use std::thread;
 use std::time::Duration;
 
 const LIST_ENDPOINT: &str = "https://api.coingecko.com/api/v3/coins/list";
@@ -89,15 +88,15 @@ async fn fetch_coins_history(pool: &Pool<Postgres>) {
             missing_pairs,
             missing_pairs.len()
         );
-        for chunk in missing_pairs.chunks(8) {
+        for chunk in missing_pairs.chunks(5) {
             futures::stream::iter(chunk)
                 .for_each(|pair| process_date(&pair.0, &pair.1, pool))
                 .await;
-            if missing_pairs.len() > 8 {
+            if missing_pairs.len() > 5 {
                 // Limitation is 10-30 calls/MINUTE
                 let sleep_for = 65;
                 info!("Sleeping for {sleep_for} seconds to avoid rate limit!");
-                thread::sleep(Duration::from_secs(sleep_for));
+                tokio::time::sleep(Duration::from_secs(sleep_for)).await;
             }
         }
     }
