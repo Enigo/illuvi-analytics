@@ -136,6 +136,10 @@ pub async fn update_d1sk_price(pool: &Pool<Postgres>) {
             WHEN asset.attribute = 'Mega D1sk Wave 2' THEN 0.01801
             WHEN asset.attribute = 'GameStop Promo D1SK Wave 1' THEN 0.029
             WHEN asset.attribute = 'Team Liquid Promo D1SK Wave 2' THEN 0.0184023
+            WHEN asset.attribute = 'Standard D1sk Alpha Wave 3' THEN 0.00881
+            WHEN asset.attribute = 'Mega D1sk Alpha Wave 3' THEN 0.02643
+            WHEN asset.attribute = 'Standard D1sk Wave 3' THEN 0.00146
+            WHEN asset.attribute = 'Mega D1sk Wave 3' THEN 0.00293
         END,
         currency='ETH'
     FROM asset
