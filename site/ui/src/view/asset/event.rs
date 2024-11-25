@@ -45,12 +45,14 @@ fn intro(asset: &EventAssetData) -> Html {
                     </div>
                   </div>
                   <div class="col-lg align-items-center order-lg-2 text-center text-lg-start ps-lg-4">
-                    <div>
-                      <p class="text-white fs-4 mb-2">
-                          {"Owned by "}
-                          {formatting_utils::format_wallet_link(&asset.common_asset_data.current_owner)}
-                      </p>
-                    </div>
+                    if !burned {
+                        <div>
+                          <p class="text-white fs-4 mb-2">
+                              {"Owned by "}
+                              {formatting_utils::format_wallet_link(&asset.common_asset_data.current_owner)}
+                          </p>
+                        </div>
+                    }
                   </div>
                 </div>
 

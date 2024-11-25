@@ -1,6 +1,8 @@
+https://illuvi-analytics.com
+
 # IlluviAnalytics
 
-This app reads multiple APIs to collect the data to evaluate profitability of the given Illuvium Land
+Explore comprehensive analytics and insights for Illuvium, the revolutionary crypto gaming project. Track trends, token stats, and performance data all in one place.
 
 ## APIs
 

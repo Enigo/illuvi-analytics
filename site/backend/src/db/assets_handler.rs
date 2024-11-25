@@ -161,24 +161,25 @@ async fn get_accessories_asset(
     token_id: &i32,
     common_asset_data: CommonAssetData,
 ) -> Option<AssetData> {
-    let illuvitar = match query_as::<_, AssetContentDb>(
-        "WITH acc_data AS (
-            SELECT token_id, (metadata ->> 'Slot') AS slot
-            FROM asset
-            where (metadata ->> 'Slot') is not null and token_id=$1
-        )
-        SELECT iluv.token_id, iluv.token_address, iluv.metadata->>'name' as name, iluv.metadata->>'image_url' as image_url
-        FROM asset iluv
-                 JOIN acc_data acc ON acc.token_id = (iluv.metadata ->> (acc.slot || ' Token Id'))::int4")
-        .bind(token_id)
-        .fetch_optional(pool)
-        .await
-    {
-        Ok(result) => result.map(|value| value.into()),
-        Err(e) => {
-            error!("Error fetching data: {e}");
-            None
+    let illuvitar = if common_asset_data.burned {
+        match query_as::<_, AssetContentDb>(
+            "SELECT iluv.token_id, iluv.token_address, iluv.metadata->>'name' AS name, iluv.metadata->>'image_url' AS image_url
+            FROM asset iluv
+            WHERE (iluv.metadata ->> (SELECT (metadata->>'Slot' || ' Token Id') FROM
+             asset WHERE token_id = $2 and token_address=$1))::int4 = $2")
+            .bind(ACCESSORIES)
+            .bind(token_id)
+            .fetch_optional(pool)
+            .await
+        {
+            Ok(result) => result.map(|value| value.into()),
+            Err(e) => {
+                error!("Error fetching data: {e}");
+                None
+            }
         }
+    } else {
+        None
     };
 
     let d1sk = get_source_d1sk(pool, token_address, token_id).await;
@@ -240,7 +241,10 @@ async fn get_illuvitar_asset(
     {
         Ok(result) => {
             result.into_iter().map(|row| AssetContentData {
-                token_id: row.get(0), token_address: ACCESSORIES.to_owned(), name: row.get(1), image_url: row.get(2)
+                token_id: row.get(0),
+                token_address: ACCESSORIES.to_owned(),
+                name: row.get(1),
+                image_url: row.get(2),
             }).collect()
         }
         Err(e) => {
@@ -420,7 +424,7 @@ async fn get_land_asset(
                     hydrogen: result.hydrogen,
                     hyperion: result.hyperion,
                     landmark: result.landmark,
-                    total_discovered_blueprints
+                    total_discovered_blueprints,
                 }),
                 d1sk: None,
                 accessories: None,
@@ -474,28 +478,26 @@ async fn get_blueprint_asset(
                   metadata->>'Discovered By' as discovered_by
                   from asset where token_address=$1 and token_id=$2",
     )
-        .bind(token_address)
-        .bind(token_id)
-        .fetch_one(pool)
-        .await
+    .bind(token_address)
+    .bind(token_id)
+    .fetch_one(pool)
+    .await
     {
-        Ok(result) => {
-            Some(AssetData {
-                blueprint: Some(BlueprintAssetData {
-                    common_asset_data,
-                    common_order_data,
-                    item_tier: result.item_tier,
-                    item_type: result.item_type,
-                    discovered_by: result.discovered_by,
-                    land,
-                }),
-                land: None,
-                d1sk: None,
-                accessories: None,
-                illuvitar: None,
-                event: None,
-            })
-        }
+        Ok(result) => Some(AssetData {
+            blueprint: Some(BlueprintAssetData {
+                common_asset_data,
+                common_order_data,
+                item_tier: result.item_tier,
+                item_type: result.item_type,
+                discovered_by: result.discovered_by,
+                land,
+            }),
+            land: None,
+            d1sk: None,
+            accessories: None,
+            illuvitar: None,
+            event: None,
+        }),
         Err(e) => {
             error!("Error fetching data: {e}");
             None
@@ -551,14 +553,14 @@ async fn query_common_order_data(
     match_part: &String,
 ) -> Option<CommonOrderData> {
     let last_filled_orders = match query_as::<_, SingleTransactionDb>(
-        format!("with current_asset as (select * from asset where token_address=$1 and token_id=$2)
+        format!("with current_asset as (select attribute, metadata from asset where token_address=$1 and token_id=$2)
         select a.token_id, a.attribute, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url,
                round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency,
                od.buy_price, od.updated_on, od.transaction_id from order_data od
             join asset a on od.token_address = a.token_address and od.token_id = a.token_id
-            join current_asset ca on ca.token_address = a.token_address
             join coin_history ch on od.buy_currency = ch.symbol and od.updated_on::date = ch.datestamp
-        where a.token_address = $1 and od.status = 'filled'
+            cross join current_asset ca
+        where od.status = 'filled' and a.token_address = $1 
         and {}
         order by updated_on desc", match_part).as_str())
         .bind(token_address)
@@ -573,15 +575,16 @@ async fn query_common_order_data(
         }
     };
 
-    let common_order_data = match query_as::<_, SingleTransactionDb>(
-        format!("with current_asset as (select * from asset where token_address=$1 and token_id=$2)
+    return match query_as::<_, SingleTransactionDb>(
+        format!("with current_asset as (select attribute, metadata
+                    from asset where token_address=$1 and token_id=$2)
         select a.token_id, a.attribute, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url,
                round((od.buy_price * ch.usd), 2) AS sum_usd, od.buy_currency,
                od.buy_price, od.updated_on, od.transaction_id from order_data od
-            join asset a on od.token_address = a.token_address and od.token_id = a.token_id
-            join current_asset ca on ca.token_address = a.token_address
-            join coin_history ch on od.buy_currency = ch.symbol
-        where a.token_address = $1 and od.status = 'active'
+               join asset a on od.token_address = a.token_address and od.token_id = a.token_id
+               join coin_history ch on od.buy_currency = ch.symbol
+               cross join current_asset ca
+        where od.status = 'active' and a.token_address = $1
         and {} and ch.datestamp = (select max(datestamp) from coin_history)
         order by sum_usd, buy_price, token_id", match_part).as_str())
         .bind(token_address)
@@ -591,13 +594,12 @@ async fn query_common_order_data(
     {
         Ok(result) => {
             get_common_order_data(token_id, last_filled_orders, result)
-        },
+        }
         Err(e) => {
             error!("Error fetching data: {e}");
             None
         }
     };
-    common_order_data
 }
 
 fn get_common_order_data(

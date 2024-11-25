@@ -162,8 +162,8 @@ async fn fetch_minted_burnt_by_attribute(
         "select attribute,
          count(*) as total_minted,
          count(*) filter (where current_owner = '0x0000000000000000000000000000000000000000') as total_burnt
-         from asset where token_address=$1 and metadata != '{}'
-         group by attribute, token_address
+         from asset where token_address=$1 and metadata != '{}'::jsonb
+         group by attribute
          order by attribute")
         .bind(token_address)
         .fetch_all(pool).await {

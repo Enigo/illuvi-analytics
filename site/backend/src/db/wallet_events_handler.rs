@@ -9,7 +9,7 @@ pub async fn get_wallet_events(
     page: i32,
     event: &String,
 ) -> Option<EventData> {
-    let total: i64 = match query("select count(timestamp) from events_view where (wallet_from=$1 or wallet_to=$1) and ($2 = 'All' or event = $2)")
+    let total: i64 = match query("select count(*) from events_view where (wallet_from=$1 or wallet_to=$1) and ($2 = 'All' or event = $2)")
         .bind(wallet)
         .bind(event)
         .fetch_one(pool)

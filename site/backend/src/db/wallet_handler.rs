@@ -107,10 +107,16 @@ async fn get_money_data(pool: &Pool<Postgres>, wallet: &String) -> WalletMoneyDa
     };
 
     let filled_data = match query_as::<_, FilledOrderDb>(
-        "select
-            sum(round((od.buy_price * ch.usd), 2)) filter ( where od.wallet_from=$1 and od.status='filled') as total_sell_usd,
-            sum(round((od.buy_price * ch.usd), 2)) filter ( where od.wallet_to=$1 and od.status='filled') as total_buy_usd
-         from order_data od join coin_history ch on ch.datestamp = od.updated_on::date and ch.symbol = od.buy_currency")
+        "with filtered_order_data as (
+            select buy_price, buy_currency, updated_on, wallet_from, wallet_to
+            from order_data
+            where status = 'filled'
+        )
+        select
+            sum(round((od.buy_price * ch.usd), 2)) filter ( where od.wallet_from=$1) as total_sell_usd,
+            sum(round((od.buy_price * ch.usd), 2)) filter ( where od.wallet_to=$1) as total_buy_usd
+        from filtered_order_data od
+            join coin_history ch on ch.datestamp = od.updated_on::date and ch.symbol = od.buy_currency")
         .bind(wallet)
         .fetch_one(pool)
         .await

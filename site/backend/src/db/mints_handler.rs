@@ -23,7 +23,7 @@ pub async fn get_all_mints_for_token_address(
         "select m.token_id, m.token_address, a.metadata->>'name' as name, a.metadata->>'image_url' as image_url from mint m
                                                     join asset a on m.token_id = a.token_id and m.token_address = a.token_address
                                            where m.token_address=$1
-                                           order by a.updated_on
+                                           order by a.token_id
                                            limit 50
                                            offset $2",
     )
